@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/db/supabase";
 
-const ADMIN_EMAIL = "mainwalop@gmail.com";
-
 export function useUserRole() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -38,7 +36,7 @@ export function useUserRole() {
   return {
     user,
     isLoggedIn: !!user,
-    isAdmin: user?.email === ADMIN_EMAIL,
+    isAdmin: user?.email === process.env.NEXT_ADMIN_EMAIL,
     loading,
     logout,
   };
