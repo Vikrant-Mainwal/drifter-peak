@@ -31,7 +31,7 @@ export default function ProductPage({
   const [added, setAdded] = useState(false);
   const [sizeError, setSizeError] = useState(false);
 
-  // ✅ FETCH FROM SUPABASE
+  // FETCH FROM SUPABASE
   useEffect(() => {
     const fetchProduct = async () => {
       const { data, error } = await supabase

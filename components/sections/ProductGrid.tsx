@@ -1,11 +1,39 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { products, formatPrice } from "@/lib/utils";
+import { formatPrice } from "@/lib/utils";
 import { useReveal } from "@/lib/hooks";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Product } from "@/types/product.types";
 
 export function ProductGrid() {
   const headerRef = useReveal();
+
+  const [products, setProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
+  
+    // FETCH FROM SUPABASE
+    useEffect(() => {
+      const fetchProducts = async () => {
+        const supabase = createClient();
+  
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .order("created_at", { ascending: false });
+  
+        if (error) {
+          console.error("PRODUCT FETCH ERROR:", error);
+        } else {
+          setProducts(data || []);
+        }
+        setLoading(false);
+      };
+  
+      fetchProducts();
+    }, []);
+
   return (
     <section className="py-24 px-6 md:px-12 max-w-[1600px] mx-auto">
       <div ref={headerRef as React.RefObject<HTMLDivElement>} className="reveal flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
@@ -27,7 +55,7 @@ export function ProductGrid() {
   );
 }
 
-function GridCard({ product, large, delay }: { product: (typeof products)[0]; large: boolean; delay: number }) {
+function GridCard({ product, large, delay }: { product: Product; large: boolean; delay: number }) {
   const ref = useReveal(delay);
   return (
     <div ref={ref as React.RefObject<HTMLDivElement>} className={`reveal ${large ? "col-span-2" : ""}`}>
@@ -45,7 +73,7 @@ function GridCard({ product, large, delay }: { product: (typeof products)[0]; la
             <p className="font-display text-base md:text-lg uppercase leading-tight mb-1" style={{ color: "var(--fg)" }}>{product.name}</p>
             <div className="flex items-center gap-2">
               <p className="font-display text-base" style={{ color: "var(--fg)" }}>{formatPrice(product.price)}</p>
-              <p className="font-mono text-xs line-through" style={{ color: "var(--muted)" }}>{formatPrice(product.originalPrice)}</p>
+              <p className="font-mono text-xs line-through" style={{ color: "var(--muted)" }}>{formatPrice(product.original_price)}</p>
             </div>
           </div>
         </div>

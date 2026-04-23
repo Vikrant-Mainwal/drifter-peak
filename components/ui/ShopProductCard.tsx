@@ -4,7 +4,7 @@ import Link from "next/link";
 import { formatPrice } from "@/lib/utils";
 
 type Product = {
-  id: string; name: string; price: number; originalPrice: number;
+  id: string; name: string; price: number; original_price: number;
   tag: string; images: string[]; limited: boolean; category: string;
 };
 
@@ -36,8 +36,8 @@ export function ShopProductCard({ product }: { product: Product }) {
           <p className="font-display text-xl uppercase tracking-wide leading-tight" style={{ color: "var(--fg)" }}>{product.name}</p>
           <div className="flex items-center gap-3">
             <span className="font-display text-lg" style={{ color: "var(--fg)" }}>{formatPrice(product.price)}</span>
-            <span className="font-mono text-xs line-through" style={{ color: "var(--muted)" }}>{formatPrice(product.originalPrice)}</span>
-            <span className="font-mono text-xs" style={{ color: "var(--red)" }}>-{Math.round((1 - product.price / product.originalPrice) * 100)}%</span>
+            <span className="font-mono text-xs line-through" style={{ color: "var(--muted)" }}>{formatPrice(product.original_price)}</span>
+            <span className="font-mono text-xs" style={{ color: "var(--red)" }}>-{Math.round((1 - product.price / product.original_price) * 100)}%</span>
           </div>
         </div>
       </div>
