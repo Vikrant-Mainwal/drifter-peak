@@ -3,10 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { ShoppingBag, Sun, Moon, Menu, X } from "lucide-react";
-import { useCart } from "@/lib/store/cart";
+import { useCartStore } from "@/lib/store/cartStore";
 import { useTheme } from "@/lib/hooks";
-
-// ✅ NEW IMPORTS
 import { useUserRole } from "@/hooks/useUserRole";
 import { useToast } from "@/hooks/useToast";
 import { ToastContainer } from "@/components/ui/Toast";
@@ -18,14 +16,14 @@ const navLinks = [
 ];
 
 export function Navbar() {
-  const count = useCart((s) =>
+  const count = useCartStore((s) =>
     s.items.reduce((total, item) => total + item.quantity, 0)
   );
-  const { openCart } = useCart();
+  const { openCart } = useCartStore();
 
   const { theme, toggle } = useTheme();
 
-  // ✅ NEW HOOKS
+  // NEW HOOKS
   const { user, isAdmin, isLoggedIn, loading, logout } = useUserRole();
   const { toasts, show, dismiss } = useToast();
 
@@ -51,7 +49,7 @@ export function Navbar() {
     prevCount.current = count;
   }, [count]);
 
-  // ✅ LOGOUT HANDLER
+  // LOGOUT HANDLER
   const handleLogout = async () => {
     await logout();
     setUserMenuOpen(false);
@@ -125,8 +123,8 @@ export function Navbar() {
               )}
             </button>
 
-            {/* ✅ ADMIN BADGE */}
-            {!loading && isAdmin && (
+            {/* ADMIN BADGE */}
+            {!loading && isLoggedIn && isAdmin && (
               <Link
                 href="/admin"
                 className="hidden md:block text-[10px] tracking-[0.2em] px-2 py-1 border"
@@ -139,7 +137,7 @@ export function Navbar() {
               </Link>
             )}
 
-            {/* ✅ AUTH */}
+            {/* AUTH */}
             {!loading &&
               (isLoggedIn ? (
                 <div className="relative">
@@ -264,7 +262,7 @@ export function Navbar() {
         </nav>
       </div>
 
-      {/* ✅ TOAST */}
+      {/* TOAST */}
       <ToastContainer toasts={toasts} dismiss={dismiss} />
     </>
   );

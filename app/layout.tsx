@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import "@/styles/globals.css";
+import '@/styles/globals.css'
 import { Loader } from "@/components/ui/Loader";
 import { ScrollProgress } from "@/components/ui/ScrollProgress";
 
