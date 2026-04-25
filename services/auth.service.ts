@@ -9,14 +9,14 @@ export const AuthService = {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: "http://localhost:3000", // change in prod
+        emailRedirectTo: process.env.NEXT_PUBLIC_WEB_URL,
       },
     });
 
     return { error: error?.message ?? null };
   },
 
-  // Step 1: send OTP
+  //  send OTP
   async sendOtp(email: string): Promise<{ error: string | null }> {
     const supabase = createClient();
 
@@ -28,7 +28,7 @@ export const AuthService = {
     return { error: error?.message ?? null };
   },
 
-  // Step 2: verify OTP
+  // verify OTP
   async verifyOtp(email: string, token: string): Promise<{ error: string | null }> {
     const supabase = createClient();
 

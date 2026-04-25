@@ -198,7 +198,6 @@ export function CartDrawer() {
                 {formatPrice(total)}
               </span>
             </div>
-            {/* <div className="space-y-2"> */}
               <Link
                 href="/cart"
                 onClick={closeCart}
@@ -215,7 +214,6 @@ export function CartDrawer() {
               >
                 CHECKOUT
               </Link>
-            {/* </div> */}
           </div>
         )}
       </div>

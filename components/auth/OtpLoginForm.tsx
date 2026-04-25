@@ -30,7 +30,7 @@ export function OtpLoginForm({ onSuccess }: OtpLoginFormProps) {
     }, 1000);
   };
 
-  // ── Email submit ───────────────────────────────────────────
+  // Email submit
   const handleEmailSubmit = async () => {
     const trimmed = email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
@@ -45,7 +45,7 @@ export function OtpLoginForm({ onSuccess }: OtpLoginFormProps) {
     setTimeout(() => inputRefs.current[0]?.focus(), 100);
   };
 
-  // ── OTP change ─────────────────────────────────────────────
+  // OTP change 
   const handleOtpChange = (i: number, val: string) => {
     if (!/^\d?$/.test(val)) return;
     const next = [...otp]; next[i] = val; setOtp(next); setError("");
@@ -63,7 +63,7 @@ export function OtpLoginForm({ onSuccess }: OtpLoginFormProps) {
     if (pasted.length === 6) { setOtp(pasted.split("")); verifyOtp(pasted); }
   };
 
-  // ── OTP verify ─────────────────────────────────────────────
+  // OTP verify
   const verifyOtp = async (code: string) => {
     setLoading(true); setError("");
     const { error: err } = await AuthService.verifyOtp(email.trim().toLowerCase(), code);
@@ -102,7 +102,7 @@ export function OtpLoginForm({ onSuccess }: OtpLoginFormProps) {
         </p>
       </div>
 
-      {/* ── EMAIL STAGE ────────────────────────────────────── */}
+      {/* EMAIL STAGE*/}
       {stage === "email" && (
         <div className="space-y-5">
           <div className="flex items-center gap-2 mb-1">
@@ -132,7 +132,7 @@ export function OtpLoginForm({ onSuccess }: OtpLoginFormProps) {
         </div>
       )}
 
-      {/* ── OTP STAGE ──────────────────────────────────────── */}
+      {/* OTP STAGE */}
       {stage === "otp" && (
         <div className="space-y-5">
           <button onClick={() => { setStage("email"); setOtp(["","","","","",""]); setError(""); }}
@@ -187,7 +187,7 @@ export function OtpLoginForm({ onSuccess }: OtpLoginFormProps) {
         </div>
       )}
 
-      {/* ── SUCCESS STAGE ──────────────────────────────────── */}
+      {/* SUCCESS STAGE */}
       {stage === "success" && (
         <div className="text-center py-4 space-y-4">
           <div className="success-circle flex items-center justify-center w-16 h-16 rounded-full mx-auto"

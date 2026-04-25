@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/client";
 
 export async function uploadImages(files: File[]) {
-  const supabase = createClient(); // use correct client
+  const supabase = createClient();
   const urls: string[] = [];
 
   for (const file of files) {
