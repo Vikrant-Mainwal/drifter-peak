@@ -70,7 +70,7 @@ export function AddressForm({ redirectTo = '/checkout' }: { redirectTo?: string 
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <Input label="Full Name" value={form.full_name} error={errors.full_name}
-          onChange={e => set('full_name', e.target.value)} required placeholder="As on ID" />
+          onChange={e => set('full_name', e.target.value)} required placeholder="As on ID"/>
         <Input label="Phone" type="tel" value={form.phone} error={errors.phone}
           onChange={e => set('phone', e.target.value.replace(/\D/g, '').slice(0, 10))}
           required placeholder="10-digit mobile" />

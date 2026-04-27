@@ -2,7 +2,7 @@
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-screen flex flex-col justify-end overflow-hidden" style={{ background: "var(--bg)" }}>
+    <section className="relative min-h-screen flex flex-col" style={{ background: "var(--bg)" }}>
       {/* Gradient bg */}
       <div className="absolute inset-0 z-0" style={{ background: "radial-gradient(ellipse 80% 60% at 60% 30%, rgba(232,255,0,0.06) 0%, transparent 60%), radial-gradient(ellipse 50% 40% at 20% 80%, rgba(255,45,45,0.05) 0%, transparent 50%)" }} />
 

@@ -9,10 +9,9 @@ export const AuthService = {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: process.env.NEXT_PUBLIC_WEB_URL,
+        emailRedirectTo: window.location.origin,
       },
     });
-    console.log("Redirect URL:", process.env.NEXT_PUBLIC_WEB_URL);
     return { error: error?.message ?? null };
   },
 

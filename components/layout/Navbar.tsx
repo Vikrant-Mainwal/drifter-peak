@@ -17,7 +17,7 @@ const navLinks = [
 
 export function Navbar() {
   const count = useCartStore((s) =>
-    s.items.reduce((total, item) => total + item.quantity, 0)
+    s.items.reduce((total, item) => total + item.quantity, 0),
   );
   const { openCart } = useCartStore();
 
@@ -65,7 +65,6 @@ export function Navbar() {
         }`}
       >
         <div className="max-w-[1600px] mx-auto px-6 md:px-12 h-16 md:h-20 flex items-center justify-between">
-          
           {/* LOGO */}
           <Link href="/">
             <div
@@ -92,11 +91,10 @@ export function Navbar() {
 
           {/* ACTIONS */}
           <div className="flex items-center gap-5">
-            
             {/* THEME */}
             <button
               onClick={toggle}
-              className="opacity-60 hover:opacity-100 transition-opacity"
+              className="opacity-60 hover:opacity-100 transition-opacity hidden md:block"
               style={{ color: "var(--fg)" }}
             >
               {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
@@ -175,8 +173,18 @@ export function Navbar() {
                           >
                             ADMIN PANEL
                           </Link>
-                        )}
-
+                        )}{" "}
+                        <button
+                          onClick={toggle}
+                          className="block w-full text-left px-4 py-2 text-[10px]"
+                          style={{ color: "var(--fg)" }}
+                        >
+                          {theme === "light" ? (
+                            <p>Light</p>
+                          ) : (
+                            <p>Dark</p>
+                          )}
+                        </button>
                         <Link
                           href="/orders"
                           onClick={() => setUserMenuOpen(false)}
@@ -184,7 +192,6 @@ export function Navbar() {
                         >
                           ORDERS
                         </Link>
-
                         <button
                           onClick={handleLogout}
                           className="block w-full text-left px-4 py-2 text-[10px]"
@@ -228,9 +235,7 @@ export function Navbar() {
           {navLinks.map((link, i) => (
             <div
               key={link.label}
-              className={`anim-fade-up ${
-                mobileOpen ? "" : "opacity-0"
-              }`}
+              className={`anim-fade-up ${mobileOpen ? "" : "opacity-0"}`}
               style={{ animationDelay: `${i * 0.08}s` }}
             >
               <Link
@@ -245,9 +250,7 @@ export function Navbar() {
           ))}
 
           <div
-            className={`anim-fade-up ${
-              mobileOpen ? "" : "opacity-0"
-            }`}
+            className={`anim-fade-up ${mobileOpen ? "" : "opacity-0"}`}
             style={{ animationDelay: "0.3s" }}
           >
             <Link

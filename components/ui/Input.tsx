@@ -19,7 +19,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       <input
         ref={ref}
         className={cn(
-          "dp-input w-full transition-all duration-200",
+          "dp-input w-full transition-all duration-200 p-2 rounded outline-none text-md",
           error && "border-[var(--red)]",
           className
         )}
