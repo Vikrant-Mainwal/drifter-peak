@@ -12,7 +12,7 @@ export const AuthService = {
         emailRedirectTo: process.env.NEXT_PUBLIC_WEB_URL,
       },
     });
-
+    console.log("Redirect URL:", process.env.NEXT_PUBLIC_WEB_URL);
     return { error: error?.message ?? null };
   },
 
