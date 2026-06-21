@@ -41,7 +41,7 @@ export const useCartStore = create<CartStore>()(
       loading: false,
       isOpen: false,
 
-      // LOAD CART (safe)
+      // LOAD CART
       loadCart: async () => {
         if (typeof window === "undefined") return;
         if (isLoadingCart) return;
@@ -81,7 +81,7 @@ export const useCartStore = create<CartStore>()(
             })) || [];
 
           set((state) => ({
-            items: items.length > 0 ? items : state.items,
+            items: items || [],
             loading: false,
           }));
         } catch (e) {

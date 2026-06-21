@@ -20,7 +20,7 @@ const variants = {
   accent:   { background: "var(--accent)", color: "var(--bg)" },
   ghost:    { background: "transparent", color: "var(--muted)" },
 };
-const sizes = { sm: "px-5 py-2.5 text-sm", md: "px-8 py-4 text-base", lg: "px-12 py-5 text-xl" };
+const sizes = { sm: "px-2 py-2.5 text-sm", md: "px-3 py-4 text-base", lg: "px-4 py-5 text-xl" };
 
 export function Button({ children, variant = "primary", size = "md", onClick, className, disabled, type = "button", fullWidth }: ButtonProps) {
   return (

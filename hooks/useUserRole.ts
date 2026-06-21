@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export function useUserRole() {
-  const [user, setUser] = useState<any>(undefined); // 👈 important
+  const [user, setUser] = useState<any>(undefined);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -13,7 +13,7 @@ export function useUserRole() {
     const init = async () => {
       const {
         data: { user },
-      } = await supabase.auth.getUser(); //  FIXED
+      } = await supabase.auth.getUser();
 
       setUser(user ?? null);
       setLoading(false);

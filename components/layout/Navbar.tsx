@@ -71,7 +71,7 @@ export function Navbar() {
               className="font-display text-2xl md:text-3xl tracking-[0.15em] uppercase transition-all duration-200 hover:tracking-[0.2em]"
               style={{ color: "var(--fg)" }}
             >
-              DRIFTER<span style={{ color: "var(--accent)" }}>.</span>PEAK
+              DRIFTER PEAK
             </div>
           </Link>
 

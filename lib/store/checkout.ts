@@ -1,4 +1,3 @@
-// lib/store/checkout.store.ts
 import { create } from 'zustand';
 import type { Address, CartItem } from '@/types/index';
 
