@@ -10,15 +10,27 @@ interface Props {
 }
 
 export default function ProductDetails({ product, variants }: Props) {
-  //   Derive unique options  
   const allColors = useMemo(
     () =>
-      [...new Set(variants.map((v) => v.color).filter(Boolean))] as string[],
+      Array.from(
+        new Set(
+          variants
+            .map((v) => v.color)
+            .filter((color): color is string => color != null),
+        ),
+      ),
     [variants],
   );
+
   const allSizes = useMemo(
     () =>
-      [...new Set(variants.map((v) => v.size).filter(Boolean))] as string[],
+      Array.from(
+        new Set(
+          variants
+            .map((v) => v.size)
+            .filter((size): size is string => size != null),
+        ),
+      ),
     [variants],
   );
 
@@ -148,7 +160,9 @@ export default function ProductDetails({ product, variants }: Props) {
                 <button
                   key={size}
                   disabled={!available}
-                  onClick={() => setSelectedSize(selectedSize === size ? "" : size)}
+                  onClick={() =>
+                    setSelectedSize(selectedSize === size ? "" : size)
+                  }
                   className={`min-w-[46px] px-3 py-1.5 rounded text-sm border text-center transition-all duration-150 ${
                     active
                       ? "bg-neutral-900 border-neutral-900 text-white"
