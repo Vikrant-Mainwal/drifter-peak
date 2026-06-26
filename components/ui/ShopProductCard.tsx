@@ -15,11 +15,11 @@ export function ShopProductCard({ product }: { product: Product }) {
         <div className="relative overflow-hidden aspect-[3/4] mb-4 card-img-hover" style={{ background: "var(--card)" }}>
           {/* Main image */}
           <div className="card-img-main absolute inset-0">
-            <Image src={product.images[0]} alt={product.name} fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
+            <Image src={product?.images[0]} alt={product.name} fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
           </div>
           {/* Alt image */}
           <div className="card-img-alt">
-            <Image src={product.images[1] || product.images[0]} alt={product.name} fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
+            <Image src={product?.images[1] || product?.images[0]} alt={product.name} fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
           </div>
           {/* Badges */}
           <div className="absolute top-4 left-4 right-4 flex justify-between z-10">

@@ -93,13 +93,13 @@ function FeaturedCard({ product, delay }: { product: Product; delay: number }) {
         >
           <div className="relative overflow-hidden aspect-square">
             <div className="img-zoom w-full h-full relative">
-              <Image
-                src={product.images[0]}
+              {/* <Image
+                src={product?.images[0]}
                 alt={product.name}
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 33vw"
-              />
+              /> */}
             </div>
             <div
               className="card-overlay absolute inset-0"

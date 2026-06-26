@@ -2,17 +2,18 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { ShoppingBag, Sun, Moon, Menu, X } from "lucide-react";
+import { ShoppingBag, Menu, X } from "lucide-react";
 import { useCartStore } from "@/lib/store/cartStore";
-import { useTheme } from "@/lib/hooks";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useToast } from "@/hooks/useToast";
 import { ToastContainer } from "@/components/ui/Toast";
 
 const navLinks = [
-  { label: "SHOP", href: "/shop" },
-  { label: "DROPS", href: "/shop" },
-  { label: "ABOUT", href: "#brand" },
+  { label: "All", href: "/shop" },
+  { label: "Men", href: "/shop" },
+  { label: "Women", href: "/shop" },
+  { label: "Accessories", href: "/shop" },
+  { label: "Orders", href: "/order" },
 ];
 
 export function Navbar() {
@@ -21,10 +22,8 @@ export function Navbar() {
   );
   const { openCart } = useCartStore();
 
-  const { theme, toggle } = useTheme();
-
   // NEW HOOKS
-  const { user, isAdmin, isLoggedIn, loading, logout } = useUserRole();
+  const { user, isLoggedIn, loading, logout } = useUserRole();
   const { toasts, show, dismiss } = useToast();
 
   const [scrolled, setScrolled] = useState(false);
@@ -59,16 +58,12 @@ export function Navbar() {
 
   return (
     <>
-      <header
-        className={`navbar fixed top-0 left-0 right-0 z-50 anim-slide-down ${
-          scrolled ? "navbar-solid" : ""
-        }`}
-      >
-        <div className="max-w-[1600px] mx-auto px-6 md:px-12 h-16 md:h-20 flex items-center justify-between">
+      <header className={`navbar fixed top-0 left-0 right-0 z-50 bg-white`}>
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12 h-16 md:h-20 flex items-center justify-between  shadow-lg">
           {/* LOGO */}
           <Link href="/">
             <div
-              className="font-display text-2xl md:text-3xl tracking-[0.15em] uppercase transition-all duration-200 hover:tracking-[0.2em]"
+              className="font-display text-2xl md:text-3xl tracking-[0.15em] uppercase"
               style={{ color: "var(--fg)" }}
             >
               DRIFTER PEAK
@@ -91,15 +86,6 @@ export function Navbar() {
 
           {/* ACTIONS */}
           <div className="flex items-center gap-5">
-            {/* THEME */}
-            <button
-              onClick={toggle}
-              className="opacity-60 hover:opacity-100 transition-opacity hidden md:block"
-              style={{ color: "var(--fg)" }}
-            >
-              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-            </button>
-
             {/* CART */}
             <button
               onClick={openCart}
@@ -120,20 +106,6 @@ export function Navbar() {
                 </span>
               )}
             </button>
-
-            {/* ADMIN BADGE */}
-            {!loading && isLoggedIn && isAdmin && (
-              <Link
-                href="/admin"
-                className="hidden md:block text-[10px] tracking-[0.2em] px-2 py-1 border"
-                style={{
-                  borderColor: "var(--accent)",
-                  color: "var(--accent)",
-                }}
-              >
-                ADMIN
-              </Link>
-            )}
 
             {/* AUTH */}
             {!loading &&
@@ -165,26 +137,13 @@ export function Navbar() {
                           borderColor: "var(--border)",
                         }}
                       >
-                        {isAdmin && (
-                          <Link
-                            href="/admin"
-                            onClick={() => setUserMenuOpen(false)}
-                            className="block px-4 py-2 text-[10px]"
-                          >
-                            ADMIN PANEL
-                          </Link>
-                        )}{" "}
-                        <button
-                          onClick={toggle}
+                        <Link
+                          href="/profile"
                           className="block w-full text-left px-4 py-2 text-[10px]"
                           style={{ color: "var(--fg)" }}
                         >
-                          {theme === "light" ? (
-                            <p>Light</p>
-                          ) : (
-                            <p>Dark</p>
-                          )}
-                        </button>
+                          Profile
+                        </Link>
                         <Link
                           href="/orders"
                           onClick={() => setUserMenuOpen(false)}
@@ -231,7 +190,7 @@ export function Navbar() {
         }`}
         style={{ background: "var(--bg)" }}
       >
-        <nav className="space-y-8">
+        <nav className="space-y-5">
           {navLinks.map((link, i) => (
             <div
               key={link.label}
@@ -241,7 +200,7 @@ export function Navbar() {
               <Link
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
-                className="font-display text-6xl uppercase tracking-tight"
+                className="font-display text-3xl uppercase tracking-tight"
                 style={{ color: "var(--fg)" }}
               >
                 {link.label}
@@ -262,6 +221,7 @@ export function Navbar() {
               CART ({count})
             </Link>
           </div>
+          <button>Login</button>
         </nav>
       </div>
 

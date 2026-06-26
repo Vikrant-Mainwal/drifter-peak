@@ -4,7 +4,7 @@ import { Loader } from "@/components/ui/Loader";
 import { ScrollProgress } from "@/components/ui/ScrollProgress";
 
 export const metadata: Metadata = {
-  title: "DRIFTER PEAK — Built Different",
+  title: "DRIFTER PEAK - Built Different",
   description:
     "Not for everyone. Premium Gen-Z streetwear for those who drift above average.",
   keywords: ["streetwear", "premium", "drifter peak", "gen-z fashion", "drop"],
