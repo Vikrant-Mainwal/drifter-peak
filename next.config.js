@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  allowedDevOrigins: ["10.34.159.218"],
   images: {
     remotePatterns: [
       {
@@ -9,6 +10,10 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "rwqolvjfhxklnttkfuzk.supabase.co",
+      },
+      {
+        protocol: "https",
+        hostname: "oyyqjuvdfptzjeamfikq.supabase.co",
       },
     ],
     

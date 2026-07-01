@@ -1,117 +1,202 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { ProductMedia } from "@/features/product/types";
+import MobileSlider from "./media-gallery/MobileSlider";
 
 interface Props {
-  media: ProductMedia[]; // already sorted by sort_order ASC from Supabase
+  media: ProductMedia[];
   productTitle: string;
 }
 
 export default function MediaGallery({ media, productTitle }: Props) {
-  const [activeIdx, setActiveIdx] = useState(0);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  console.log(media);
+  return (
+    <div>
+      <DesktopStack media={media} productTitle={productTitle} />
+      <MobileSlider media={media} productTitle={productTitle} />
+    </div>
+  );
+}
 
-  // The media array is mixed — images and videos together, ordered by sort_order.
-  const active = media[activeIdx];
-  const isActiveVideo = active?.media_type === "video";
-
-  // When switching to a new thumb, pause any playing video
-  function handleThumbClick(idx: number) {
-    if (videoRef.current) {
-      videoRef.current.pause();
-    }
-    setActiveIdx(idx);
-  }
+function DesktopStack({
+  media,
+  productTitle,
+}: {
+  media: ProductMedia[];
+  productTitle: string;
+}) {
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
 
   if (!media.length) {
     return (
-      <div className="w-full aspect-[4/5] bg-neutral-100 flex items-center justify-center text-neutral-400 text-sm">
+      <div className="hidden md:flex w-full aspect-[4/5] bg-neutral-100 items-center justify-center text-neutral-400 text-sm">
         No media
       </div>
     );
   }
 
   return (
-    <div>
-      {/* Hero viewer */}
-      <div className="relative w-full aspect-[4/5] bg-neutral-100 overflow-hidden">
-        {isActiveVideo ? (
+    <>
+      <div className="hidden md:block">
+        {media.map((item, i) => {
+          const isVideo = item.media_type === "video";
+          return (
+            <button
+              key={item.id}
+              onClick={() => setLightboxIdx(i)}
+              aria-label={`Open ${isVideo ? "video" : "image"} ${i + 1} full screen`}
+              className="relative w-full flex-shrink-0 snap-center bg-neutral-100"
+              style={{ paddingTop: "125%" }}
+            >
+              {isVideo ? (
+                <video
+                  src={item.url}
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover pointer-events-none"
+                />
+              ) : (
+                <Image
+                  src={item.url}
+                  alt={`${productTitle} — view ${i + 1}`}
+                  fill
+                  priority={i === 0}
+                  className="object-cover"
+                  sizes="60vw"
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {lightboxIdx !== null && (
+        <Lightbox
+          media={media}
+          productTitle={productTitle}
+          startIdx={lightboxIdx}
+          onClose={() => setLightboxIdx(null)}
+        />
+      )}
+    </>
+  );
+}
+
+function Lightbox({
+  media,
+  productTitle,
+  startIdx,
+  onClose,
+}: {
+  media: ProductMedia[];
+  productTitle: string;
+  startIdx: number;
+  onClose: () => void;
+}) {
+  const [idx, setIdx] = useState(startIdx);
+  const active = media[idx];
+  const isVideo = active?.media_type === "video";
+
+  const goPrev = useCallback(() => setIdx((i) => Math.max(0, i - 1)), []);
+  const goNext = useCallback(
+    () => setIdx((i) => Math.min(media.length - 1, i + 1)),
+    [media.length],
+  );
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") goPrev();
+      if (e.key === "ArrowRight") goNext();
+    }
+    window.addEventListener("keydown", handleKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = "";
+    };
+  }, [onClose, goPrev, goNext]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[999] bg-black/90 flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+    >
+      <button
+        onClick={onClose}
+        aria-label="Close"
+        className="absolute top-5 right-5 w-9 h-9 rounded-full bg-white flex items-center justify-center shadow"
+      >
+        <svg
+          className="w-4 h-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      </button>
+
+      <button
+        onClick={goPrev}
+        disabled={idx === 0}
+        aria-label="Previous"
+        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white flex items-center justify-center shadow disabled:opacity-30"
+      >
+        <svg
+          className="w-4 h-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+
+      <div className="flex items-center justify-center w-full h-screen px-20">
+        {isVideo ? (
           <video
-            ref={videoRef}
-            key={active.url} // remount when url changes so it doesn't play old src
             src={active.url}
             controls
-            playsInline
-            className="w-full h-full object-cover"
+            className="max-h-[90vh] max-w-[90vw]"
           />
         ) : (
-          active?.url && (
-            <Image
-              src={active.url}
-              alt={`${productTitle} — view ${activeIdx + 1}`}
-              fill
-              priority={activeIdx === 0}
-              className="object-cover transition-opacity duration-200"
-              sizes="(max-width: 768px) 100vw, 60vw"
-            />
-          )
+          <Image
+            src={active.url}
+            alt={productTitle}
+            width={1200}
+            height={1800}
+            className="max-h-[90vh] w-auto h-auto object-contain"
+            priority
+          />
         )}
       </div>
 
-      {/* Thumbnail strip (all media mixed) */}
-      {media.length > 1 && (
-        <div className="grid grid-cols-4 gap-[3px] mt-[3px]">
-          {media.map((item, i) => {
-            const isVideo = item.media_type === "video";
-            const isActive = activeIdx === i;
+      <button
+        onClick={goNext}
+        disabled={idx === media.length - 1}
+        aria-label="Next"
+        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 flex items-center justify-center shadow disabled:opacity-30"
+      >
+        <svg
+          className="w-4 h-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path d="M9 6l6 6-6 6" />
+        </svg>
+      </button>
 
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleThumbClick(i)}
-                aria-label={isVideo ? `Video ${i + 1}` : `Image ${i + 1}`}
-                className={`relative aspect-square overflow-hidden border-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black ${
-                  isActive ? "border-black" : "border-transparent hover:border-neutral-300"
-                }`}
-              >
-                {isVideo ? (
-                  // For video thumbs: show a dark tile with a play icon.
-                  // If you later add a poster/thumbnail_url column you can show that here instead.
-                  <div className="w-full h-full bg-neutral-800 flex items-center justify-center">
-                    <svg
-                      className="w-5 h-5 text-white opacity-80"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                ) : (
-                  item.url && (
-                    <Image
-                      src={item.url}
-                      alt=""
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 25vw, 15vw"
-                    />
-                  )
-                )}
-
-                {/* "VID" badge on video thumbnails */}
-                {isVideo && (
-                  <span className="absolute bottom-1 left-1 text-[9px] font-semibold text-white bg-black/60 px-1 rounded tracking-widest">
-                    VID
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-xs font-medium text-white bg-black/50 px-3 py-1 rounded-full">
+        {idx + 1} / {media.length}
+      </div>
     </div>
   );
 }

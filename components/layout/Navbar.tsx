@@ -53,13 +53,13 @@ export function Navbar() {
     await logout();
     setUserMenuOpen(false);
     show("Signed out successfully", "info");
-    window.location.reload(); // ensure UI refresh
+    window.location.reload();
   };
 
   return (
     <>
-      <header className={`navbar fixed top-0 left-0 right-0 z-50 bg-white`}>
-        <div className="max-w-[1600px] mx-auto px-6 md:px-12 h-16 md:h-20 flex items-center justify-between  shadow-lg">
+      <header className={`navbar sticky top-0 left-0 right-0 z-50 bg-white border-b border-gray-300`}>
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12 h-16 md:h-20 flex items-center justify-between">
           {/* LOGO */}
           <Link href="/">
             <div

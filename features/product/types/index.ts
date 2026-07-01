@@ -39,7 +39,7 @@ export type ProductMedia = {
   id: string;
   product_id: string;
   variant_id: string | null;
-  media_type: string;
+  media_type: "image" | "video";
   url: string;
   sort_order: number;
   created_at: string;

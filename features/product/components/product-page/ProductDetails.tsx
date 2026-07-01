@@ -123,7 +123,7 @@ export default function ProductDetails({ product, variants }: Props) {
                   setSelectedColor(color);
                   setSelectedSize(""); // reset size on colour change
                 }}
-                className={`px-3.5 py-1.5 rounded text-sm border transition-all duration-150 ${
+                className={`px-3 py-1 rounded text-sm border transition-all duration-150 ${
                   selectedColor === color
                     ? "bg-neutral-900 border-neutral-900 text-white"
                     : "border-neutral-300 text-neutral-700 hover:border-neutral-500"
