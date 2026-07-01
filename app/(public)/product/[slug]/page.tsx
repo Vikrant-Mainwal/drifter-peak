@@ -12,15 +12,29 @@ export default async function ProductPage({ params }: Props) {
   const { slug } = await params;
   const supabase = await createClient();
 
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+
+const { data: product, error } = await supabase
+  .from("products")
+  .select("*")
+  .eq(isUUID ? "id" : "slug", slug)
+  .eq("is_active", true)
+  .single();
+
+
   // Fetch product
-  const { data: product } = await supabase
-    .from("products")
-    .select("*")
-    .eq("slug", slug)
-    .eq("is_active", true)
-    .single();
+  // const { data: product } = await supabase
+  //   .from("products")
+  //   .select("*")
+  //   .eq("slug", slug)
+  //   .eq("is_active", true)
+  //   .single();
+
+  
 
   if (!product) notFound();
+
+  console.log("prodct" , product.list_title)
 
   //  Fetch variants
   const { data: variants } = await supabase

@@ -41,21 +41,56 @@ export default function ProductDetails({ product, variants }: Props) {
   const [selectedSize, setSelectedSize] = useState("");
   const [showSizeChart, setShowSizeChart] = useState(false);
 
-  // Selected variant — intersection of chosen color + size
-  const selectedVariant = useMemo(
-    () =>
-      selectedSize
-        ? (variants.find(
-            (v) => v.color === selectedColor && v.size === selectedSize,
-          ) ?? null)
-        : null,
-    [variants, selectedColor, selectedSize],
-  );
+  // Selected variant - intersection of chosen color + size
+  // const selectedVariant = useMemo(
+  //   () =>
+  //     selectedSize
+  //       ? (variants.find(
+  //           (v) => v.color === selectedColor && v.size === selectedSize,
+  //         ) ?? null)
+  //       : null,
+  //   [variants, selectedColor, selectedSize],
+  // );
+  //   const selectedVariant = useMemo(
+  //   () =>
+  //     selectedSize
+  //       ? variants.find(
+  //           (v) => v.color === selectedColor && v.size === selectedSize,
+  //         ) ?? null
+  //       : null,
+  //   [variants, selectedColor, selectedSize],
+  // );
+
+  const selectedVariant = useMemo(() => {
+    if (!selectedSize) return null;
+
+    const variant = variants.find((v) => {
+      console.log("Comparing:", {
+        selectedColor,
+        variantColor: v.color,
+        colorMatch: v.color === selectedColor,
+        selectedSize,
+        variantSize: v.size,
+        sizeMatch: v.size === selectedSize,
+      });
+
+      return v.color === selectedColor && v.size === selectedSize;
+    });
+
+    console.log("Found Variant:", variant);
+
+    return variant ?? null;
+  }, [variants, selectedColor, selectedSize]);
 
   // Price display
+  const variantPrices = variants
+    .map((v) => v.price)
+    .filter((price): price is number => price != null);
+
   const displayPrice =
     selectedVariant?.price ??
-    Math.min(...variants.map((v) => v.price), product.selling_price);
+    (variantPrices.length ? Math.min(...variantPrices) : product.selling_price);
+
 
   const discountPct =
     product.mrp > displayPrice

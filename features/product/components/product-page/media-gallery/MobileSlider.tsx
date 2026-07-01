@@ -76,7 +76,7 @@ function useSwipe({
 
       if (axisLocked.current === "y") return;
 
-      e.preventDefault();
+      // e.preventDefault();
       currentX.current = t.clientX;
 
       const atStart = activeIdx === 0 && dx > 0;
@@ -252,7 +252,7 @@ function MobileSlider({
     >
       <div
         ref={trackRef}
-        className="flex"
+        className="flex touch-pan-y"
         style={{
           transform: `translate3d(${translateX}%, 0, 0)`,
           transition:
@@ -262,6 +262,7 @@ function MobileSlider({
           willChange: "transform",
         }}
         {...handlers}
+        
       >
         {media.map((item, i) => (
           <Slide

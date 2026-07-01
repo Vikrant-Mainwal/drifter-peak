@@ -36,8 +36,10 @@ export function ProductCard({
     setIsWishlisted((prev) => !prev);
   };
 
+  const ProductId = product.id || product.slug;
+
   return (
-    <Link href={`/product/${product.slug}`} className="block w-full">
+    <Link href={`/product/${ProductId}`} className="block w-full">
       <article
         className="bg-white"
         onMouseEnter={() => setHovered(true)}
