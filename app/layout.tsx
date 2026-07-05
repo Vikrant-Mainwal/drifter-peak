@@ -24,7 +24,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="grain">
         <Loader />
-        <ScrollProgress />
+        {/* <ScrollProgress /> */}
         {children}
       </body>
     </html>

@@ -1,15 +1,21 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { Product, ProductVariant } from "@/features/product/types";
+import { useCartStore } from "@/features/cart/lib/store/cartStore";
 
 interface Props {
   product: Product;
   variants: ProductVariant[];
+  image: string; //  NEW: primary product image, passed from the server page
 }
 
-export default function ProductDetails({ product, variants }: Props) {
+export default function ProductDetails({ product, variants, image }: Props) {
+  const router = useRouter();
+  const addItem = useCartStore((s) => s.addItem);
+
   const allColors = useMemo(
     () =>
       Array.from(
@@ -40,49 +46,17 @@ export default function ProductDetails({ product, variants }: Props) {
   const [selectedColor, setSelectedColor] = useState(allColors[0] ?? "");
   const [selectedSize, setSelectedSize] = useState("");
   const [showSizeChart, setShowSizeChart] = useState(false);
-
-  // Selected variant - intersection of chosen color + size
-  // const selectedVariant = useMemo(
-  //   () =>
-  //     selectedSize
-  //       ? (variants.find(
-  //           (v) => v.color === selectedColor && v.size === selectedSize,
-  //         ) ?? null)
-  //       : null,
-  //   [variants, selectedColor, selectedSize],
-  // );
-  //   const selectedVariant = useMemo(
-  //   () =>
-  //     selectedSize
-  //       ? variants.find(
-  //           (v) => v.color === selectedColor && v.size === selectedSize,
-  //         ) ?? null
-  //       : null,
-  //   [variants, selectedColor, selectedSize],
-  // );
+  const [added, setAdded] = useState(false);
 
   const selectedVariant = useMemo(() => {
     if (!selectedSize) return null;
-
-    const variant = variants.find((v) => {
-      console.log("Comparing:", {
-        selectedColor,
-        variantColor: v.color,
-        colorMatch: v.color === selectedColor,
-        selectedSize,
-        variantSize: v.size,
-        sizeMatch: v.size === selectedSize,
-      });
-
-      return v.color === selectedColor && v.size === selectedSize;
-    });
-
-    console.log("Found Variant:", variant);
-
-    return variant ?? null;
+    return (
+      variants.find(
+        (v) => v.color === selectedColor && v.size === selectedSize,
+      ) ?? null
+    );
   }, [variants, selectedColor, selectedSize]);
 
-  // Price display
   const variantPrices = variants
     .map((v) => v.price)
     .filter((price): price is number => price != null);
@@ -91,18 +65,46 @@ export default function ProductDetails({ product, variants }: Props) {
     selectedVariant?.price ??
     (variantPrices.length ? Math.min(...variantPrices) : product.selling_price);
 
-
   const discountPct =
     product.mrp > displayPrice
       ? Math.round(((product.mrp - displayPrice) / product.mrp) * 100)
       : 0;
 
-  // Is a size in stock for the current color?
   function isAvailable(size: string) {
     const v = variants.find(
       (v) => v.color === selectedColor && v.size === size,
     );
     return !!v && v.stock > 0;
+  }
+
+  function buildCartItem() {
+    if (!selectedVariant) return null;
+    return {
+      variant_id: selectedVariant.id,
+      product_id: product.id,
+      slug: product.slug,
+      name: product.list_title,
+      price: selectedVariant.price ?? displayPrice,
+      size: selectedVariant.size ?? "",
+      color: selectedVariant.color ?? null,
+      image,
+      stock: selectedVariant.stock,
+    };
+  }
+
+  function handleAddToCart() {
+    const item = buildCartItem();
+    if (!item) return;
+    addItem(item);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1500);
+  }
+
+  function handleBuyNow() {
+    const item = buildCartItem();
+    if (!item) return;
+    addItem(item);
+    router.push("/checkout");
   }
 
   return (
@@ -156,7 +158,7 @@ export default function ProductDetails({ product, variants }: Props) {
                 key={color}
                 onClick={() => {
                   setSelectedColor(color);
-                  setSelectedSize(""); // reset size on colour change
+                  setSelectedSize("");
                 }}
                 className={`px-3 py-1 rounded text-sm border transition-all duration-150 ${
                   selectedColor === color
@@ -247,25 +249,25 @@ export default function ProductDetails({ product, variants }: Props) {
       )}
 
       {/*   CTA buttons    */}
-      {/*
-        Wire these up when cart is ready.
-        ADD TO CART  → addItem(variant) + openCartDrawer()
-        BUY NOW      → addItem(variant) + router.push('/checkout')
-        Both should be disabled if !selectedSize || !selectedVariant
-      */}
       <div className="mt-6 flex flex-col gap-3">
         <button
           disabled={!selectedVariant}
+          onClick={handleAddToCart}
           className={`w-full py-4 rounded text-sm font-semibold tracking-[0.1em] transition-all duration-150 ${
             selectedVariant
               ? "bg-neutral-900 text-white hover:bg-neutral-700 active:scale-[0.98]"
               : "bg-neutral-100 text-neutral-400 cursor-not-allowed"
           }`}
         >
-          {hasSizes && !selectedSize ? "SELECT A SIZE" : "ADD TO CART"}
+          {hasSizes && !selectedSize
+            ? "SELECT A SIZE"
+            : added
+              ? "ADDED"
+              : "ADD TO CART"}
         </button>
         <button
           disabled={!selectedVariant}
+          onClick={handleBuyNow}
           className={`w-full py-4 rounded text-sm font-semibold tracking-[0.1em] border transition-all duration-150 ${
             selectedVariant
               ? "border-neutral-900 text-neutral-900 hover:bg-neutral-50 active:scale-[0.98]"

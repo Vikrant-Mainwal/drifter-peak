@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { ShoppingBag, Menu, X } from "lucide-react";
-import { useCartStore } from "@/lib/store/cartStore";
+import { Menu, X } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useToast } from "@/hooks/useToast";
 import { ToastContainer } from "@/components/ui/Toast";
+import { CartIcon } from "@/features/cart/components/cart/CartIcon";
+import { useCartStore } from "../../features/cart/lib/store/cartStore";
 
 const navLinks = [
   { label: "All", href: "/shop" },
@@ -17,12 +18,6 @@ const navLinks = [
 ];
 
 export function Navbar() {
-  const count = useCartStore((s) =>
-    s.items.reduce((total, item) => total + item.quantity, 0),
-  );
-  const { openCart } = useCartStore();
-
-  // NEW HOOKS
   const { user, isLoggedIn, loading, logout } = useUserRole();
   const { toasts, show, dismiss } = useToast();
 
@@ -30,25 +25,21 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  const prevCount = useRef(count);
-  const badgeRef = useRef<HTMLSpanElement>(null);
-
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  useEffect(() => {
-    if (count > prevCount.current && badgeRef.current) {
-      badgeRef.current.classList.remove("anim-bounce-in");
-      void badgeRef.current.offsetWidth;
-      badgeRef.current.classList.add("anim-bounce-in");
-    }
-    prevCount.current = count;
-  }, [count]);
+  // useEffect(() => {
+  //   if (count > prevCount.current && badgeRef.current) {
+  //     badgeRef.current.classList.remove("anim-bounce-in");
+  //     void badgeRef.current.offsetWidth;
+  //     badgeRef.current.classList.add("anim-bounce-in");
+  //   }
+  //   prevCount.current = count;
+  // }, [count]);
 
-  // LOGOUT HANDLER
   const handleLogout = async () => {
     await logout();
     setUserMenuOpen(false);
@@ -58,7 +49,9 @@ export function Navbar() {
 
   return (
     <>
-      <header className={`navbar sticky top-0 left-0 right-0 z-50 bg-white border-b border-gray-300`}>
+      <header
+        className={`navbar sticky top-0 left-0 right-0 z-50 bg-white border-b border-gray-300`}
+      >
         <div className="max-w-[1600px] mx-auto px-6 md:px-12 h-16 md:h-20 flex items-center justify-between">
           {/* LOGO */}
           <Link href="/">
@@ -87,13 +80,13 @@ export function Navbar() {
           {/* ACTIONS */}
           <div className="flex items-center gap-5">
             {/* CART */}
-            <button
+            {/* <button
               onClick={openCart}
               className="relative flex items-center gap-2 transition-opacity hover:opacity-70"
               style={{ color: "var(--fg)" }}
-            >
-              <ShoppingBag size={18} />
-              {count > 0 && (
+            > */}
+            {/* <ShoppingBag size={18} />
+              {hydrated && count > 0 && (
                 <span
                   ref={badgeRef}
                   className="anim-bounce-in absolute -top-2 -right-2 w-4 h-4 font-mono text-[9px] flex items-center justify-center rounded-full"
@@ -104,8 +97,9 @@ export function Navbar() {
                 >
                   {count}
                 </span>
-              )}
-            </button>
+              )} */}
+            <CartIcon />
+            {/* </button> */}
 
             {/* AUTH */}
             {!loading &&
@@ -212,14 +206,15 @@ export function Navbar() {
             className={`anim-fade-up ${mobileOpen ? "" : "opacity-0"}`}
             style={{ animationDelay: "0.3s" }}
           >
-            <Link
-              href="/cart"
-              onClick={() => setMobileOpen(false)}
-              className="font-display text-6xl uppercase tracking-tight"
-              style={{ color: "var(--accent)" }}
+            <button
+              onClick={() => {
+                setMobileOpen(false);
+                useCartStore.getState().openCart();
+              }}
+              className="font-display text-3xl uppercase tracking-tight"
             >
-              CART ({count})
-            </Link>
+              CART
+            </button>
           </div>
           <button>Login</button>
         </nav>

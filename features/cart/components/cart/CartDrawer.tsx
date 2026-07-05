@@ -2,18 +2,19 @@
 import Image from "next/image";
 import Link from "next/link";
 import { X, Trash2 } from "lucide-react";
-import { useCartStore } from "@/lib/store/cartStore";
+import { useCartStore } from "@/features/cart/lib/store/cartStore";
 import { formatPrice } from "@/lib/utils";
+import { useHydrated } from "@/features/cart/hooks/useHydrated";
 
 export function CartDrawer() {
-  const count = useCartStore((s) =>
-    s.items.reduce((total, item) => total + item.quantity, 0),
-  );
-  const total = useCartStore((s) =>
-    s.items.reduce((total, item) => total + item.price * item.quantity, 0),
-  );
-  const { items, isOpen, closeCart, removeItem, updateQuantity } =
+  const mounted = useHydrated();
+  const count = useCartStore((s) => s.count());
+  const total = useCartStore((s) => s.total());
+  const { items, isOpen, loading, closeCart, removeItem, updateQuantity } =
     useCartStore();
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <>
@@ -25,7 +26,7 @@ export function CartDrawer() {
       />
       {/* Drawer */}
       <div
-        className={`cart-drawer fixed right-0 top-0 bottom-0 z-50 w-full max-w-md flex flex-col ${isOpen ? "open" : ""}`}
+        className={`cart-drawer fixed right-0 top-0 bottom-0 z-50 w-full max-w-md flex flex-col p-2 ${isOpen ? "open" : ""}`}
         style={{
           background: "var(--bg)",
           borderLeft: "1px solid var(--border)",
@@ -61,7 +62,16 @@ export function CartDrawer() {
 
         {/* Items */}
         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
-          {items.length === 0 ? (
+          {loading ? (
+            <div className="flex h-64 items-center justify-center">
+              <p
+                className="font-mono text-xs tracking-widest"
+                style={{ color: "var(--muted)" }}
+              >
+                LOADING...
+              </p>
+            </div>
+          ) : items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 gap-4">
               <p
                 className="font-display text-3xl uppercase"
@@ -86,15 +96,17 @@ export function CartDrawer() {
           ) : (
             items.map((item, idx) => (
               <div
-                key={`${item.id}-${item.size}`}
+                key={item.variant_id}
                 className="cart-item flex gap-4 pb-6 border-b"
                 style={{
                   borderColor: "var(--border)",
                   animationDelay: `${idx * 0.06}s`,
                 }}
               >
-                <div
-                  className="relative w-20 h-24 flex-shrink-0 overflow-hidden"
+                <Link
+                  href={`/product/${item.slug}`}
+                  onClick={closeCart}
+                  className="relative w-20 h-24 flex-shrink-0 overflow-hidden block"
                   style={{ background: "var(--card)" }}
                 >
                   <Image
@@ -104,7 +116,7 @@ export function CartDrawer() {
                     className="object-cover"
                     sizes="80px"
                   />
-                </div>
+                </Link>
                 <div className="flex-1">
                   <div className="flex justify-between">
                     <p
@@ -114,7 +126,7 @@ export function CartDrawer() {
                       {item.name}
                     </p>
                     <button
-                      onClick={() => removeItem(item.product_id, item.size)}
+                      onClick={() => removeItem(item.variant_id)}
                       className="opacity-30 hover:opacity-80 transition-opacity"
                       style={{ color: "var(--fg)" }}
                     >
@@ -126,6 +138,7 @@ export function CartDrawer() {
                     style={{ color: "var(--muted)" }}
                   >
                     SIZE: {item.size}
+                    {item.color ? ` · ${item.color.toUpperCase()}` : ""}
                   </p>
                   <div className="flex justify-between items-center">
                     <div
@@ -134,11 +147,7 @@ export function CartDrawer() {
                     >
                       <button
                         onClick={() =>
-                          updateQuantity(
-                            item.product_id,
-                            item.quantity - 1,
-                            item.size,
-                          )
+                          updateQuantity(item.variant_id, item.quantity - 1)
                         }
                         className="w-8 h-8 font-mono text-sm hover:opacity-50 transition-opacity flex items-center justify-center"
                         style={{ color: "var(--fg)" }}
@@ -153,13 +162,10 @@ export function CartDrawer() {
                       </span>
                       <button
                         onClick={() =>
-                          updateQuantity(
-                            item.product_id,
-                            item.quantity + 1,
-                            item.size,
-                          )
+                          updateQuantity(item.variant_id, item.quantity + 1)
                         }
-                        className="w-8 h-8 font-mono text-sm hover:opacity-50 transition-opacity flex items-center justify-center"
+                        disabled={item.quantity >= item.stock}
+                        className="w-8 h-8 font-mono text-sm hover:opacity-50 transition-opacity flex items-center justify-center disabled:opacity-20"
                         style={{ color: "var(--fg)" }}
                       >
                         +
@@ -198,22 +204,22 @@ export function CartDrawer() {
                 {formatPrice(total)}
               </span>
             </div>
-              <Link
-                href="/cart"
-                onClick={closeCart}
-                className="btn-press block w-full py-3 text-center font-display text-xl tracking-[0.15em] uppercase"
-                style={{ background: "var(--fg)", color: "var(--bg)" }}
-              >
-                VIEW CART
-              </Link>
-              <Link
-                href="/checkout"
-                onClick={closeCart}
-                className="btn-press block text-center w-full py-3 font-display text-xl tracking-[0.15em] uppercase"
-                style={{ background: "var(--accent)", color: "var(--bg)" }}
-              >
-                CHECKOUT
-              </Link>
+            <Link
+              href="/cart"
+              onClick={closeCart}
+              className="btn-press block w-full py-3 text-center font-display text-xl tracking-[0.15em] uppercase"
+              style={{ background: "var(--fg)", color: "var(--bg)" }}
+            >
+              VIEW CART
+            </Link>
+            <Link
+              href="/checkout"
+              onClick={closeCart}
+              className="btn-press block text-center w-full py-3 font-display text-xl tracking-[0.15em] uppercase"
+              style={{ background: "var(--accent)", color: "var(--bg)" }}
+            >
+              CHECKOUT
+            </Link>
           </div>
         )}
       </div>

@@ -1,22 +1,20 @@
-// app/cart/page.tsx
 "use client";
 import Image from "next/image";
 import Link from "next/link";
 import { Trash2 } from "lucide-react";
-import { useCartStore } from "@/lib/store/cartStore";
+import { useCartStore } from "../../../features/cart/lib/store/cartStore";
 import { formatPrice } from "@/lib/utils";
 import { Footer } from "@/components/layout/Footer";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useRouter } from "next/navigation";
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, loading } = useCartStore(); //  ADD: loading
+  const { items, removeItem, updateQuantity, loading } = useCartStore();
   const { user, loading: authLoading } = useAuth();
-  
+
   useEffect(() => {
-    if (!authLoading && user) {
-      useCartStore.getState().loadCart();
+    if (!authLoading) {
+      useCartStore.getState().loadCart(user?.id ?? null);
     }
   }, [user, authLoading]);
 
@@ -24,15 +22,9 @@ export default function CartPage() {
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
-  //  CHANGE: Move shipping calc here (was inline in JSX)
   const shipping = subtotal >= 2000 ? 0 : 199;
   const total = subtotal + shipping;
 
-  useEffect(() => {
-    useCartStore.getState().loadCart();
-  }, []);
-
-  //Loading state
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -44,7 +36,6 @@ export default function CartPage() {
     );
   }
 
-  // Everything below is IDENTICAL to your existing code
   return (
     <>
       <section className="min-h-screen pt-28 pb-20 px-6 md:px-12">
@@ -88,7 +79,6 @@ export default function CartPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-16">
-              {/* Items — IDENTICAL to your code */}
               <div>
                 <div
                   className="grid grid-cols-[1fr_auto] pb-4 border-b mb-2"
@@ -110,15 +100,16 @@ export default function CartPage() {
 
                 {items.map((item, idx) => (
                   <div
-                    key={`${item.product_id}-${item.size}`}
+                    key={item.variant_id}
                     className="cart-item grid grid-cols-[80px_1fr_auto] gap-5 py-6 border-b items-start"
                     style={{
                       borderColor: "var(--border)",
                       animationDelay: `${idx * 60}ms`,
                     }}
                   >
-                    <div
-                      className="relative aspect-square overflow-hidden"
+                    <Link
+                      href={`/product/${item.slug}`}
+                      className="relative aspect-square overflow-hidden block"
                       style={{ background: "var(--card)" }}
                     >
                       <Image
@@ -128,32 +119,32 @@ export default function CartPage() {
                         className="object-cover"
                         sizes="80px"
                       />
-                    </div>
+                    </Link>
 
                     <div>
-                      <p
-                        className="font-display text-xl uppercase tracking-wide mb-1"
-                        style={{ color: "var(--fg)" }}
-                      >
-                        {item.name}
-                      </p>
+                      <Link href={`/product/${item.slug}`}>
+                        <p
+                          className="font-display text-xl uppercase tracking-wide mb-1"
+                          style={{ color: "var(--fg)" }}
+                        >
+                          {item.name}
+                        </p>
+                      </Link>
                       <p
                         className="font-mono text-xs tracking-[0.2em] mb-4"
                         style={{ color: "var(--muted)" }}
                       >
                         SIZE: {item.size}
+                        {item.color ? ` · ${item.color.toUpperCase()}` : ""}
                       </p>
+
                       <div
                         className="flex items-center border w-fit"
                         style={{ borderColor: "var(--border)" }}
                       >
                         <button
                           onClick={() =>
-                            updateQuantity(
-                              item.product_id,
-                              item.quantity - 1,
-                              item.size,
-                            )
+                            updateQuantity(item.variant_id, item.quantity - 1)
                           }
                           className="w-9 h-9"
                           style={{ color: "var(--fg)" }}
@@ -168,18 +159,24 @@ export default function CartPage() {
                         </span>
                         <button
                           onClick={() =>
-                            updateQuantity(
-                              item.product_id,
-                              item.quantity + 1,
-                              item.size,
-                            )
+                            updateQuantity(item.variant_id, item.quantity + 1)
                           }
-                          className="w-9 h-9"
+                          disabled={item.quantity >= item.stock}
+                          className="w-9 h-9 disabled:opacity-30"
                           style={{ color: "var(--fg)" }}
                         >
                           +
                         </button>
                       </div>
+
+                      {item.quantity >= item.stock && (
+                        <p
+                          className="font-mono text-[10px] tracking-wider mt-2"
+                          style={{ color: "var(--accent)" }}
+                        >
+                          MAX STOCK REACHED
+                        </p>
+                      )}
                     </div>
 
                     <div className="flex flex-col items-end gap-3">
@@ -190,7 +187,7 @@ export default function CartPage() {
                         {formatPrice(item.price * item.quantity)}
                       </span>
                       <button
-                        onClick={() => removeItem(item.product_id, item.size)}
+                        onClick={() => removeItem(item.variant_id)}
                         style={{ color: "var(--fg)" }}
                       >
                         <Trash2 size={14} />
@@ -200,7 +197,6 @@ export default function CartPage() {
                 ))}
               </div>
 
-              {/* Summary — only change: use split subtotal/shipping/total */}
               <div
                 className="h-fit border p-8 sticky top-28"
                 style={{
@@ -218,14 +214,12 @@ export default function CartPage() {
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between font-mono text-xs tracking-wider">
                     <span style={{ color: "var(--muted)" }}>SUBTOTAL</span>
-                    {/*  CHANGE: use subtotal instead of total */}
                     <span style={{ color: "var(--fg)" }}>
                       {formatPrice(subtotal)}
                     </span>
                   </div>
                   <div className="flex justify-between font-mono text-xs tracking-wider">
                     <span style={{ color: "var(--muted)" }}>SHIPPING</span>
-                    {/*  CHANGE: use pre-computed shipping */}
                     <span
                       style={{
                         color: shipping === 0 ? "var(--accent)" : "var(--fg)",
@@ -247,7 +241,6 @@ export default function CartPage() {
                     >
                       TOTAL
                     </span>
-                    {/*  CHANGE: use pre-computed total */}
                     <span
                       className="font-display text-3xl"
                       style={{ color: "var(--fg)" }}
@@ -257,16 +250,14 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                {/*  CHANGE: was Link, now button navigating to /checkout */}
                 <Link
                   href="/checkout"
-                  className="btn-press block w-full py-4 text-center font-display text-xl tracking-[0.15em] uppercase"
-                  style={{ background: "var(--accent)", color: "var(--bg)" }}
+                  className="btn-press block w-full py-2 text-center font-display text-xl tracking-[0.15em] uppercase"
+                  style={{ background: "var(--muted)", color: "var(--bg)" }}
                 >
                   CHECKOUT NOW
                 </Link>
 
-                {/*  Free shipping nudge */}
                 {subtotal < 2000 && subtotal > 0 && (
                   <p
                     className="text-center font-mono text-[10px] tracking-wider mt-4"

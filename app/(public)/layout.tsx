@@ -1,7 +1,8 @@
 "use client";
 
 import { Navbar } from "@/components/layout/Navbar";
-import { CartDrawer } from "@/components/layout/CartDrawer";
+import { CartDrawer } from "@/features/cart/components/cart/CartDrawer";
+import { CartSyncProvider } from "@/features/cart/components/providers/CartSyncProvider";
 
 export default function PublicLayout({
   children,
@@ -10,9 +11,11 @@ export default function PublicLayout({
 }) {
   return (
     <>
-      <Navbar />
-      <CartDrawer />
-      <main>{children}</main>
+      <CartSyncProvider>
+        <Navbar />
+        <CartDrawer />
+        <main>{children}</main>
+      </CartSyncProvider>
     </>
   );
 }
