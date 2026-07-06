@@ -1,5 +1,3 @@
-// features/cart/types/cart.ts
-
 export interface CartItem {
   variant_id: string;
   product_id: string;

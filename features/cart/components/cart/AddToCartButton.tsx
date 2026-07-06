@@ -10,6 +10,7 @@ interface Props {
   variantId: string;
   size: string;
   color: string | null;
+  mrp: number;
   price: number;
   stock: number;
   image: string;
@@ -36,6 +37,7 @@ export function AddToCartButton(props: Props) {
       product_id: props.productId,
       slug: props.slug,
       name: props.name,
+      mrp: props.mrp,
       price: props.price,
       size: props.size,
       color: props.color,
