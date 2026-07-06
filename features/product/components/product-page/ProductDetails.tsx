@@ -148,10 +148,7 @@ export default function ProductDetails({ product, variants, image }: Props) {
       {hasColors && (
         <div className="mt-6">
           <p className="text-[11px] uppercase tracking-[0.1em] text-neutral-400 mb-2">
-            Colour —{" "}
-            <span className="normal-case tracking-normal text-neutral-700">
-              {selectedColor}
-            </span>
+            Colour
           </p>
           <div className="flex flex-wrap gap-2">
             {allColors.map((color) => (
@@ -163,8 +160,8 @@ export default function ProductDetails({ product, variants, image }: Props) {
                 }}
                 className={`px-3 py-1 rounded text-sm border transition-all duration-150 ${
                   selectedColor === color
-                    ? "bg-neutral-900 border-neutral-900 text-white"
-                    : "border-neutral-300 text-neutral-700 hover:border-neutral-500"
+                    ? "bg-black text-white border-black"
+                    : "bg-white text-black border-gray-300 hover:border-black"
                 }`}
               >
                 {color}
@@ -205,8 +202,8 @@ export default function ProductDetails({ product, variants, image }: Props) {
                     active
                       ? "bg-neutral-900 border-neutral-900 text-white"
                       : available
-                        ? "border-neutral-300 text-neutral-700 hover:border-neutral-500"
-                        : "border-neutral-100 text-neutral-300 cursor-not-allowed line-through"
+                        ? "border-neutral-900 text-black"
+                        : "bg-black text-white"
                   }`}
                 >
                   {size}
@@ -254,10 +251,8 @@ export default function ProductDetails({ product, variants, image }: Props) {
         <button
           disabled={!selectedVariant}
           onClick={handleAddToCart}
-          className={`w-full py-4 rounded text-sm font-semibold tracking-[0.1em] transition-all duration-150 ${
-            selectedVariant
-              ? "bg-neutral-900 text-white hover:bg-neutral-700 active:scale-[0.98]"
-              : "bg-neutral-100 text-neutral-400 cursor-not-allowed"
+          className={`w-full py-4 rounded text-sm font-semibold tracking-[0.1em] transition-all duration-150 bg-black text-white ${
+            selectedVariant ? "active:scale-[0.98]" : "cursor-not-allowed"
           }`}
         >
           {hasSizes && !selectedSize
