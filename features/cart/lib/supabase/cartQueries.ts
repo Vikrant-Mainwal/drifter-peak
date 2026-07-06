@@ -93,6 +93,7 @@ export async function fetchCartItems(cartId: string): Promise<CartItem[]> {
         product_id: v.product_id,
         slug: v.products?.slug ?? "",
         name: v.products?.list_title ?? "",
+        mrp: v.mrp,
         price: v.price,
         size: v.size,
         color: v.color,
