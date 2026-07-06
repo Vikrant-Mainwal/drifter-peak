@@ -84,6 +84,7 @@ export default function ProductDetails({ product, variants, image }: Props) {
       product_id: product.id,
       slug: product.slug,
       name: product.list_title,
+      mrp: product.mrp,
       price: selectedVariant.price ?? displayPrice,
       size: selectedVariant.size ?? "",
       color: selectedVariant.color ?? null,
