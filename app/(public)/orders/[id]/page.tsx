@@ -176,10 +176,10 @@ export default function OrderDetailPage({
               </h2>
             </div>
             <div className="text-sm text-neutral-700 space-y-1">
-              <p className="font-medium">{order.address.full_name}</p>
+              <p className="font-medium">{order.address.name}</p>
               <p>
-                {order.address.line1}
-                {order.address.line2 && `, ${order.address.line2}`}
+                {order.address.house_number}
+                {order.address.address_line && `, ${order.address.locality}`}
               </p>
               <p>
                 {order.address.city}, {order.address.state} —{" "}
