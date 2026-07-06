@@ -8,13 +8,15 @@ export type PaymentStatus = 'pending' | 'success' | 'failed' | 'refunded';
 export interface Address {
   id: string;
   user_id: string;
-  full_name: string;
+  name: string;
   phone: string;
-  line1: string;
-  line2?: string;
+  house_number: string;
+  address_line: string;
+  locality: string;
   city: string;
   state: string;
   pincode: string;
+  address_type: 'home' | 'office' | 'other';
   is_default: boolean;
   created_at: string;
 }
