@@ -52,7 +52,7 @@ export function OrderCard({ order }: { order: Order }) {
                   className="relative w-12 h-14 bg-neutral-100 overflow-hidden flex-shrink-0"
                 >
                   <Image
-                    src={getImageUrl(item.product_image)}
+                    src={getImageUrl(item.thumbnail_url)}
                     alt={item.product_name}
                     fill
                     className="object-cover"
@@ -68,7 +68,7 @@ export function OrderCard({ order }: { order: Order }) {
             </div>
 
             <p className="text-sm font-semibold text-neutral-900 mt-3">
-              ₹{order.total.toLocaleString("en-IN")}
+              ₹{order.total_amount.toLocaleString("en-IN")}
             </p>
           </div>
           <ChevronRight

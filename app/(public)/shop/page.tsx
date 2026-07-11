@@ -35,9 +35,6 @@ export default function ShopPage() {
         )
         .order("created_at", { ascending: false });
 
-      console.log("RAW PRODUCTS FROM DB:", data);
-      console.log("FETCH ERROR:", error);
-
       if (error) {
         console.error("PRODUCT FETCH ERROR:", error);
         return;
@@ -62,8 +59,6 @@ export default function ShopPage() {
           category: p.subcategory ?? "",
         };
       });
-
-      console.log("MAPPED FOR CARD:", mapped);
 
       setProducts(mapped);
     };

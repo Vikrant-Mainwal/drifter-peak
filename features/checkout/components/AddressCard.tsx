@@ -1,5 +1,5 @@
 import { MapPin, Plus } from "lucide-react";
-import type { Address } from "@/types/index";
+import type { Address } from "../../address/types";
 
 interface Props {
   address: Address | null;

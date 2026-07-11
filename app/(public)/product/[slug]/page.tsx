@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import MediaGallery from "@/features/product/components/product-page/MediaGallery";
 import ProductDetails from "@/features/product/components/product-page/ProductDetails";
+import { getProductBySlugOrId } from "@/features/product/api/getProduct";
+import { PLACEHOLDER_IMAGE } from "@/lib/utils";
 import type { ProductMedia } from "@/features/product/types";
 
 interface Props {
@@ -12,14 +14,7 @@ export default async function ProductPage({ params }: Props) {
   const { slug } = await params;
   const supabase = await createClient();
 
-  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
-
-  const { data: product, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq(isUUID ? "id" : "slug", slug)
-    .eq("is_active", true)
-    .single();
+  const product = await getProductBySlugOrId(supabase, slug);
 
   if (!product) notFound();
 
@@ -56,7 +51,7 @@ export default async function ProductPage({ params }: Props) {
           <ProductDetails
             product={product}
             variants={variants ?? []}
-            image={sortedMedia[0]?.url ?? ""}
+            image={sortedMedia[0]?.url ?? PLACEHOLDER_IMAGE}
           />
         </div>
       </div>

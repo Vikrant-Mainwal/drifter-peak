@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 import type { CartItem } from "@/features/cart/types/cart";
+import { PLACEHOLDER_IMAGE } from "@/lib/utils";
 
 export async function clearCartItems(cartId: string) {
   const supabase = createClient();
@@ -51,7 +52,7 @@ export async function fetchCartItems(cartId: string): Promise<CartItem[]> {
         price,
         stock,
         is_active,
-        products ( list_title, slug, is_active )
+        products ( list_title, slug, is_active, mrp, selling_price )
       )
     `,
     )
@@ -75,11 +76,11 @@ export async function fetchCartItems(cartId: string): Promise<CartItem[]> {
     .order("sort_order", { ascending: true });
 
   const imageFor = (productId: string, variantId: string) => {
-    const variantMatch = media?.find((m) => m.variant_id === variantId);
+    const variantMatch = media?.find((m: any) => m.variant_id === variantId);
     if (variantMatch) return variantMatch.url;
     return (
-      media?.find((m) => m.product_id === productId && !m.variant_id)?.url ??
-      ""
+      media?.find((m: any) => m.product_id === productId && !m.variant_id)?.url ??
+      PLACEHOLDER_IMAGE
     );
   };
 
@@ -87,14 +88,23 @@ export async function fetchCartItems(cartId: string): Promise<CartItem[]> {
     .filter((row: any) => row.product_variants)
     .map((row: any) => {
       const v = row.product_variants;
+      const product = v.products;
+
+      // The variant's own price is the source of truth when it's set, but
+      // some variants are created without a per-variant price override —
+      // fall back to the parent product's selling_price so the cart never
+      // shows a null/₹0 line item. mrp follows the same chain.
+      const price = v.price ?? product?.selling_price ?? 0;
+      const mrp = product?.mrp ?? product?.selling_price ?? price;
+
       return {
         variant_id: row.variant_id,
         quantity: row.quantity,
         product_id: v.product_id,
-        slug: v.products?.slug ?? "",
-        name: v.products?.list_title ?? "",
-        mrp: v.mrp,
-        price: v.price,
+        slug: product?.slug || v.product_id,
+        name: product?.list_title ?? "",
+        mrp: Number(mrp) || 0,
+        price: Number(price) || 0,
         size: v.size,
         color: v.color,
         stock: v.stock,

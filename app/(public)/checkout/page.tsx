@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCartStore } from "@/features/cart/lib/store/cartStore";
-import { getAddresses } from "@/lib/supabase/queries/addresses";
-import type { Address } from "@/types/index";
 import type { AppliedCoupon } from "@/features/checkout/types/checkout";
 import { computeOrderTotals } from "@/features/checkout/lib/pricing";
+import { loadRazorpayScript } from "../../../features/checkout/lib/razorpayCheckout";
 import { CheckoutSummary } from "@/features/checkout/components/CheckoutSummary";
 import { PriceBreakdown } from "@/features/checkout/components/PriceBreakdown";
 import { AddressCard } from "@/features/checkout/components/AddressCard";
@@ -17,60 +17,36 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { ToastContainer } from "@/components/ui/Toast";
 import { useToast } from "@/hooks/useToast";
+import { AddressManager, useAddressStore } from "@/features/address";
 
 export default function CheckoutPage() {
+  const router = useRouter();
   const items = useCartStore((s) => s.items);
   const cartLoading = useCartStore((s) => s.loading);
   const hydrated = useCartStore((s) => s.hydrated);
 
-  const [addresses, setAddresses] = useState<Address[]>([]);
-  const [addressesLoading, setAddressesLoading] = useState(true);
-  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
-    null,
-  );
+  const addresses = useAddressStore((s) => s.addresses);
+  const selectedAddressId = useAddressStore((s) => s.selectedId);
+  const addressesLoading = useAddressStore((s) => s.isLoading);
+  const fetchAddresses = useAddressStore((s) => s.fetchAddresses);
+
   const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
   const [placingOrder, setPlacingOrder] = useState(false);
+  const [isAddressOpen, setIsAddressOpen] = useState(false);
 
   const { toasts, show, dismiss } = useToast();
 
   useEffect(() => {
-    let cancelled = false;
-
-    getAddresses()
-      .then((data) => {
-        if (cancelled) return;
-        setAddresses(data);
-        const preferred = data.find((a) => a.is_default) ?? data[0] ?? null;
-        setSelectedAddressId(preferred?.id ?? null);
-      })
-      .catch(() => {
-        if (!cancelled) show("Couldn't load your addresses", "error");
-      })
-      .finally(() => {
-        if (!cancelled) setAddressesLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    fetchAddresses();
+  }, [fetchAddresses]);
 
   const selectedAddress =
     addresses.find((a) => a.id === selectedAddressId) ?? null;
 
   const totals = computeOrderTotals(items, coupon?.discountAmount ?? 0);
 
-  // Stubs — Address Popup (next feature) will replace these with a real
-  // bottom-sheet flow instead of a toast.
-  function handleEditAddress() {
-    show("Address editing lands in the next feature", "info");
-  }
-  function handleChangeAddress() {
-    show("Multiple addresses land in the next feature", "info");
-  }
-  function handleAddAddress() {
-    show("Add-address flow lands in the next feature", "info");
+  function handleChangeOrAddAddress() {
+    setIsAddressOpen(true);
   }
 
   // Stub — no coupons table exists yet. Swap this for a real Supabase/RPC
@@ -82,16 +58,79 @@ export default function CheckoutPage() {
     setCoupon(null);
   }
 
-  // Stub — Payment Flow (a later feature) will replace this with:
-  // validate → create Razorpay order → open Razorpay → verify → create order.
-  function handleProceedToPayment() {
+  async function handleProceedToPayment() {
     if (!selectedAddress) {
       show("Please add a delivery address first", "error");
       return;
     }
+
     setPlacingOrder(true);
-    show("Payment flow lands in the next feature", "info");
-    setTimeout(() => setPlacingOrder(false), 600);
+
+    try {
+      const res = await fetch("/api/checkout/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address_id: selectedAddress.id }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        show(data.error ?? "Couldn't start checkout", "error");
+        setPlacingOrder(false);
+        return;
+      }
+
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        show("Couldn't load the payment gateway. Check your connection.", "error");
+        setPlacingOrder(false);
+        return;
+      }
+
+      const rzp = new window.Razorpay({
+        key: data.key_id,
+        amount: data.amount,
+        currency: data.currency,
+        order_id: data.razorpay_order_id,
+        name: "Drifter Peak",
+        description: `Order ${data.order_id.slice(0, 8).toUpperCase()}`,
+        prefill: {
+          name: selectedAddress.name,
+          contact: selectedAddress.phone,
+        },
+        theme: { color: "#000000" },
+        handler: async (response: {
+          razorpay_order_id: string;
+          razorpay_payment_id: string;
+          razorpay_signature: string;
+        }) => {
+          try {
+            const verifyRes = await fetch("/api/checkout/verify-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...response, order_id: data.order_id }),
+            });
+            if (!verifyRes.ok) throw new Error("verification failed");
+            await useCartStore.getState().clearCart();
+            router.push(`/payment/success?order_id=${data.order_id}`);
+          } catch {
+            router.push(`/payment/failure?order_id=${data.order_id}`);
+          }
+        },
+        modal: {
+          ondismiss: () => setPlacingOrder(false),
+        },
+      });
+
+      rzp.on("payment.failed", () => {
+        router.push(`/payment/failure?order_id=${data.order_id}`);
+      });
+
+      rzp.open();
+    } catch {
+      show("Something went wrong. Please try again.", "error");
+      setPlacingOrder(false);
+    }
   }
 
   if (!hydrated || cartLoading || addressesLoading) {
@@ -120,9 +159,9 @@ export default function CheckoutPage() {
 
         <AddressCard
           address={selectedAddress}
-          onEdit={handleEditAddress}
-          onChange={handleChangeAddress}
-          onAddNew={handleAddAddress}
+          onEdit={handleChangeOrAddAddress}
+          onChange={handleChangeOrAddAddress}
+          onAddNew={handleChangeOrAddAddress}
         />
 
         <CheckoutSummary items={items} />
@@ -160,6 +199,10 @@ export default function CheckoutPage() {
         loading={placingOrder}
         onProceed={handleProceedToPayment}
       />
+
+      {isAddressOpen && (
+        <AddressManager onClose={() => setIsAddressOpen(false)} />
+      )}
 
       <p className="mt-6 text-center text-xs text-[color:var(--muted)] md:hidden">
         <Link href="/cart" className="underline">

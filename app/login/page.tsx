@@ -1,20 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 type Step = "phone" | "otp" | "name";
 
 export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
+  const { user, loading: authLoading } = useAuth();
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Already logged in (checked via the shared auth context instead of a
+  // separate getSession() call) - bounce to the homepage.
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace("/");
+    }
+  }, [authLoading, user, router]);
+
+  const checkingSession = authLoading || !!user;
 
   const isValidPhone = /^[6-9]\d{9}$/.test(phone);
   const formatted = isValidPhone ? `+91${phone}` : "";
@@ -24,8 +36,8 @@ export default function LoginPage() {
     phoneTouched && phone.length === 10 && !isValidPhone
       ? "Mobile number must start with 6, 7, 8, or 9"
       : phoneTouched && phone.length < 10
-      ? `Enter ${10 - phone.length} more digit${10 - phone.length > 1 ? "s" : ""}`
-      : "";
+        ? `Enter ${10 - phone.length} more digit${10 - phone.length > 1 ? "s" : ""}`
+        : "";
 
   function normalizePhone(raw: string): string {
     return raw.replace(/\D/g, "").slice(0, 10);
@@ -61,6 +73,7 @@ export default function LoginPage() {
       token: otp,
       type: "sms",
     });
+
     if (error) {
       setLoading(false);
       return setError(error.message);
@@ -84,7 +97,9 @@ export default function LoginPage() {
   async function saveName() {
     setError("");
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     const { error } = await supabase
       .from("profiles")
       .update({ name })
@@ -94,6 +109,17 @@ export default function LoginPage() {
     router.push("/");
   }
 
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div
+          className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"
+          style={{ borderColor: "#111827", borderTopColor: "transparent" }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="bg-white border border-gray-200 rounded-xl p-8 w-full max-w-sm">
@@ -101,7 +127,9 @@ export default function LoginPage() {
 
         {step === "phone" && (
           <>
-            <p className="text-sm text-gray-500 mb-4">Enter your mobile number</p>
+            <p className="text-sm text-gray-500 mb-4">
+              Enter your mobile number
+            </p>
             <div className="flex border border-gray-300 rounded-lg overflow-hidden mb-3">
               <span className="px-3 bg-gray-50 border-r border-gray-300 text-sm text-gray-500 flex items-center">
                 +91
@@ -113,10 +141,12 @@ export default function LoginPage() {
                 placeholder="10-digit number"
                 className="flex-1 px-3 py-2.5 text-sm outline-none text-black"
                 value={phone}
-                onChange={e => setPhone(normalizePhone(e.target.value))}
+                onChange={(e) => setPhone(normalizePhone(e.target.value))}
               />
             </div>
-            {phoneError && <p className="text-xs text-amber-600 mb-2">{phoneError}</p>}
+            {phoneError && (
+              <p className="text-xs text-amber-600 mb-2">{phoneError}</p>
+            )}
             {error && <p className="text-xs text-red-600 mb-3">{error}</p>}
             <button
               onClick={sendOtp}
@@ -130,7 +160,9 @@ export default function LoginPage() {
 
         {step === "otp" && (
           <>
-            <p className="text-sm text-gray-500 mb-4">Code sent to +91 {phone}</p>
+            <p className="text-sm text-gray-500 mb-4">
+              Code sent to +91 {phone}
+            </p>
             <input
               type="tel"
               inputMode="numeric"
@@ -138,7 +170,7 @@ export default function LoginPage() {
               placeholder="6-digit OTP"
               className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-lg font-semibold tracking-widest text-center outline-none mb-3 focus:border-gray-900 text-black"
               value={otp}
-              onChange={e => setOtp(e.target.value.replace(/\D/g, ""))}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
               autoFocus
             />
             {error && <p className="text-xs text-red-600 mb-3">{error}</p>}
@@ -150,7 +182,11 @@ export default function LoginPage() {
               {loading ? "Verifying…" : "Verify"}
             </button>
             <button
-              onClick={() => { setStep("phone"); setOtp(""); setError(""); }}
+              onClick={() => {
+                setStep("phone");
+                setOtp("");
+                setError("");
+              }}
               className="text-xs text-gray-400 hover:text-gray-700"
             >
               ← Change number
@@ -160,13 +196,15 @@ export default function LoginPage() {
 
         {step === "name" && (
           <>
-            <p className="text-sm text-gray-500 mb-4">What should we call you?</p>
+            <p className="text-sm text-gray-500 mb-4">
+              What should we call you?
+            </p>
             <input
               type="text"
               placeholder="Your name"
               className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm outline-none mb-3 focus:border-gray-900 text-black"
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={(e) => setName(e.target.value)}
               autoFocus
             />
             {error && <p className="text-xs text-red-600 mb-3">{error}</p>}

@@ -12,8 +12,6 @@ export function CartIcon() {
 
   const count = items.reduce((sum, item) => sum + item.quantity, 0);
 
-  console.log("count cart icon", count);
-
   if (!mounted) return null;
 
   return (

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ArrowLeft, MapPin } from "lucide-react";
@@ -12,9 +12,9 @@ import type { Order } from "@/types";
 export default function OrderDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const { id } = params;
+  const { id } = use(params);
   const router = useRouter();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -31,26 +31,6 @@ export default function OrderDetailPage({
       .finally(() => setLoading(false));
   }, [id, router]);
 
-  const getImageUrl = (img: any): string => {
-    if (!img) return "/placeholder.png"; // fallback
-
-    try {
-      // If already array
-      if (Array.isArray(img)) return img[0];
-
-      // If stringified array
-      if (typeof img === "string" && img.startsWith("[")) {
-        const parsed = JSON.parse(img);
-        return Array.isArray(parsed) ? parsed[0] : img;
-      }
-
-      // Normal string
-      return img;
-    } catch {
-      return "/placeholder.png";
-    }
-  };
-
   if (loading) return <PageSpinner />;
   if (!order) return null;
 
@@ -59,7 +39,6 @@ export default function OrderDetailPage({
     month: "long",
     year: "numeric",
   });
-  const payment = order.payments?.[0];
   const fmt = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
   return (
@@ -78,7 +57,7 @@ export default function OrderDetailPage({
             Order
           </p>
           <p className="text-xl font-bold font-mono text-neutral-900">
-            #{order.id.slice(0, 8).toUpperCase()}
+            {order.order_number}
           </p>
           <p className="text-sm text-neutral-500 mt-1">{date}</p>
         </div>
@@ -96,7 +75,7 @@ export default function OrderDetailPage({
               <div key={item.id} className="flex gap-4 items-center">
                 <div className="relative w-16 h-20 bg-neutral-100 flex-shrink-0 overflow-hidden">
                   <Image
-                    src={getImageUrl(item.product_image)}
+                    src={item.thumbnail_url || "/placeholder.png"}
                     alt={item.product_name}
                     fill
                     className="object-cover"
@@ -108,10 +87,12 @@ export default function OrderDetailPage({
                     {item.product_name}
                   </p>
                   <p className="text-xs text-neutral-500 mt-0.5">
-                    Size: {item.size} · Qty: {item.quantity}
+                    Size: {item.size}
+                    {item.color ? ` · ${item.color}` : ""} · Qty:{" "}
+                    {item.quantity}
                   </p>
                   <p className="text-sm font-semibold text-neutral-900 mt-1">
-                    {fmt(item.price * item.quantity)}
+                    {fmt(item.line_total)}
                   </p>
                 </div>
               </div>
@@ -131,18 +112,22 @@ export default function OrderDetailPage({
             </div>
             <div className="flex justify-between text-neutral-600">
               <span>Shipping</span>
-              <span>{order.shipping === 0 ? "FREE" : fmt(order.shipping)}</span>
+              <span>
+                {order.shipping_fee === 0 ? "FREE" : fmt(order.shipping_fee)}
+              </span>
             </div>
-            <div className="flex justify-between text-neutral-600">
-              <span>GST (18%)</span>
-              <span>{fmt(order.tax)}</span>
-            </div>
+            {order.discount_amount > 0 && (
+              <div className="flex justify-between text-neutral-600">
+                <span>Discount</span>
+                <span>-{fmt(order.discount_amount)}</span>
+              </div>
+            )}
             <div className="border-t border-neutral-100 pt-2 flex justify-between font-semibold text-neutral-900">
               <span>Total</span>
-              <span>{fmt(order.total)}</span>
+              <span>{fmt(order.total_amount)}</span>
             </div>
           </div>
-          {payment && (
+          {order.razorpay_payment_id && (
             <div className="mt-4 pt-4 border-t border-neutral-100">
               <p className="text-xs text-neutral-500 uppercase tracking-wide mb-2">
                 Payment Info
@@ -151,44 +136,38 @@ export default function OrderDetailPage({
                 <p>
                   Status:{" "}
                   <span
-                    className={`font-medium ${payment.status === "success" ? "text-green-600" : "text-red-600"}`}
+                    className={`font-medium ${order.paid_at ? "text-green-600" : "text-red-600"}`}
                   >
-                    {payment.status.toUpperCase()}
+                    {order.paid_at ? "PAID" : "PENDING"}
                   </span>
                 </p>
-                {payment.razorpay_payment_id && (
-                  <p className="font-mono">
-                    Ref: {payment.razorpay_payment_id}
-                  </p>
-                )}
+                <p className="font-mono">Ref: {order.razorpay_payment_id}</p>
               </div>
             </div>
           )}
         </Card>
 
-        {/* Address */}
-        {order.address && (
-          <Card>
-            <div className="flex items-center gap-2 mb-3">
-              <MapPin size={14} className="text-neutral-500" />
-              <h2 className="text-base font-semibold text-neutral-900">
-                Delivered To
-              </h2>
-            </div>
-            <div className="text-sm text-neutral-700 space-y-1">
-              <p className="font-medium">{order.address.name}</p>
-              <p>
-                {order.address.house_number}
-                {order.address.address_line && `, ${order.address.locality}`}
-              </p>
-              <p>
-                {order.address.city}, {order.address.state} —{" "}
-                {order.address.pincode}
-              </p>
-              <p className="text-neutral-500">{order.address.phone}</p>
-            </div>
-          </Card>
-        )}
+        {/* Address — a snapshot taken at order time, not a live address */}
+        <Card>
+          <div className="flex items-center gap-2 mb-3">
+            <MapPin size={14} className="text-neutral-500" />
+            <h2 className="text-base font-semibold text-neutral-900">
+              Delivered To
+            </h2>
+          </div>
+          <div className="text-sm text-neutral-700 space-y-1">
+            <p className="font-medium">{order.shipping_name}</p>
+            <p>
+              {order.shipping_house_number}, {order.shipping_address_line},{" "}
+              {order.shipping_locality}
+            </p>
+            <p>
+              {order.shipping_city}, {order.shipping_state} —{" "}
+              {order.shipping_pincode}
+            </p>
+            <p className="text-neutral-500">{order.shipping_phone}</p>
+          </div>
+        </Card>
       </div>
     </div>
   );

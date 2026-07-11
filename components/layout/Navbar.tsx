@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-import { useUserRole } from "@/hooks/useUserRole";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
 import { ToastContainer } from "@/components/ui/Toast";
 import { CartIcon } from "@/features/cart/components/cart/CartIcon";
@@ -14,11 +14,11 @@ const navLinks = [
   { label: "Men", href: "/shop" },
   { label: "Women", href: "/shop" },
   { label: "Accessories", href: "/shop" },
-  { label: "Orders", href: "/order" },
+  { label: "Orders", href: "/orders" },
 ];
 
 export function Navbar() {
-  const { user, isLoggedIn, loading, logout } = useUserRole();
+  const { user, profile, isLoggedIn, loading, signOut } = useAuth();
   const { toasts, show, dismiss } = useToast();
 
   const [scrolled, setScrolled] = useState(false);
@@ -41,10 +41,9 @@ export function Navbar() {
   // }, [count]);
 
   const handleLogout = async () => {
-    await logout();
+    await signOut();
     setUserMenuOpen(false);
     show("Signed out successfully", "info");
-    window.location.reload();
   };
 
   return (
@@ -113,7 +112,7 @@ export function Navbar() {
                         color: "var(--fg)",
                       }}
                     >
-                      {user?.email?.[0]?.toUpperCase()}
+                      {(profile?.name?.[0] ?? user?.phone?.[0] ?? user?.email?.[0] ?? "?").toUpperCase()}
                     </div>
                   </button>
 

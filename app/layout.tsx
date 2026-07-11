@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import '@/styles/globals.css'
+import "@/styles/globals.css";
 import { Loader } from "@/components/ui/Loader";
 import { ScrollProgress } from "@/components/ui/ScrollProgress";
+import { AuthProvider } from "@/components/providers/AuthProvider";
 
 export const metadata: Metadata = {
   title: "DRIFTER PEAK - Built Different",
@@ -23,9 +24,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="grain">
-        <Loader />
-        {/* <ScrollProgress /> */}
-        {children}
+        <AuthProvider>
+          <Loader />
+          {/* <ScrollProgress /> */}
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

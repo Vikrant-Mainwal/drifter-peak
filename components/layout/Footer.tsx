@@ -1,21 +1,21 @@
 "use client";
 import Link from "next/link";
 import { Instagram, Twitter } from "lucide-react";
-import { useReveal } from "@/lib/hooks";
+// import { useReveal } from "@/lib/hooks";
 
 export function Footer() {
-  const ref = useReveal();
+  // const ref = useReveal();
   return (
     <footer className="border-t py-16 px-6 md:px-12" style={{ borderColor: "var(--border)" }}>
       <div className="max-w-[1600px] mx-auto">
         {/* Big text */}
         <div className="mb-20 overflow-hidden">
           <p
-            ref={ref as React.RefObject<HTMLParagraphElement>}
+            // ref={ref as React.RefObject<HTMLParagraphElement>}
             className="reveal font-display text-[clamp(50px,10vw,150px)] leading-none tracking-tighter uppercase"
             style={{ color: "var(--fg)", opacity: 0.08 }}
           >
-            DRIFT ABOVE AVERAGE
+            Build for Journey.
           </p>
         </div>
 

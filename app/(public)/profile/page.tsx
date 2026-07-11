@@ -1,61 +1,35 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "../../../lib/supabase/client";
-
-interface Profile {
-  id: string;
-  phone: string;
-  name: string | null;
-  email: string | null;
-  photo_url: string | null;
-  dob: string | null;
-  gender: string | null;
-}
+import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import type { UserProfile } from "@/types/auth.types";
 
 export default function ProfilePage() {
   const supabase = createClient();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, profile, loading: authLoading, refreshProfile } = useAuth();
+
+  const [form, setForm] = useState<UserProfile | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // The auth context already fetched the profile once (no separate
+  // getUser()/profile query here, which used to race the session hydrating
+  // after login/navigation and show "Not logged in" until a hard refresh).
+  // We just mirror it into local editable form state.
   useEffect(() => {
-    loadProfile();
-  }, []);
-
-  async function loadProfile() {
-  setLoading(true);
-  const { data: { user } } = await supabase.auth.getUser();
-  console.log("user", user)
-  
-  if (!user) {
-    setError("Not logged in");
-    setLoading(false);
-    return;
-  }
-
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, phone, name, email, photo_url, dob, gender")
-    .eq("id", user.id)
-    .single();
-
-  if (error) {
-    setError(error.message);
-  } else {
-    setProfile(data);
-  }
-  setLoading(false);
-}
+    if (profile) {
+      setForm(profile);
+    }
+  }, [profile]);
 
   async function handleSave() {
-    if (!profile) return;
+    if (!form) return;
     setError("");
     setSuccess("");
 
-    if (!profile.name || profile.name.trim().length === 0) {
+    if (!form.name || form.name.trim().length === 0) {
       setError("Name is required");
       return;
     }
@@ -64,24 +38,25 @@ export default function ProfilePage() {
     const { error } = await supabase
       .from("profiles")
       .update({
-        name: profile.name,
-        email: profile.email,
-        dob: profile.dob,
-        gender: profile.gender,
+        name: form.name,
+        email: form.email,
+        dob: form.dob,
+        gender: form.gender,
       })
-      .eq("id", profile.id);
+      .eq("id", form.id);
     setSaving(false);
 
     if (error) return setError(error.message);
+    await refreshProfile();
     setSuccess("Profile updated");
   }
 
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file || !profile) return;
+    if (!file || !form) return;
 
     setError("");
-    const filePath = `${profile.id}/profile.jpg`;
+    const filePath = `${form.id}/profile.jpg`;
 
     const { error: uploadError } = await supabase.storage
       .from("avatars")
@@ -99,18 +74,29 @@ export default function ProfilePage() {
     const { error: updateError } = await supabase
       .from("profiles")
       .update({ photo_url: photoUrl })
-      .eq("id", profile.id);
+      .eq("id", form.id);
 
     if (updateError) return setError(updateError.message);
-    setProfile({ ...profile, photo_url: photoUrl });
+    setForm({ ...form, photo_url: photoUrl });
+    await refreshProfile();
   }
 
-  if (loading) {
+  if (authLoading) {
     return <div className="p-8 text-sm text-gray-500">Loading profile…</div>;
   }
 
-  if (!profile) {
-    return <div className="p-8 text-sm text-red-600">Could not load profile.</div>;
+  if (!user) {
+    return (
+      <div className="p-8 text-sm text-red-600">
+        You need to be logged in to view your profile.
+      </div>
+    );
+  }
+
+  if (!form) {
+    return (
+      <div className="p-8 text-sm text-red-600">Could not load profile.</div>
+    );
   }
 
   return (
@@ -119,15 +105,24 @@ export default function ProfilePage() {
 
       <div className="flex items-center gap-4 mb-6">
         <div className="w-16 h-16 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center text-gray-400 text-xs">
-          {profile.photo_url ? (
-            <img src={profile.photo_url} alt="Profile" className="w-full h-full object-cover" />
+          {form.photo_url ? (
+            <img
+              src={form.photo_url}
+              alt="Profile"
+              className="w-full h-full object-cover"
+            />
           ) : (
             "No photo"
           )}
         </div>
         <label className="text-sm text-gray-700 cursor-pointer underline">
           Change photo
-          <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handlePhotoUpload}
+          />
         </label>
       </div>
 
@@ -136,7 +131,7 @@ export default function ProfilePage() {
           <label className="block text-xs text-gray-500 mb-1">Phone</label>
           <input
             type="text"
-            value={profile.phone}
+            value={form.phone}
             disabled
             className="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-500"
           />
@@ -146,8 +141,8 @@ export default function ProfilePage() {
           <label className="block text-xs text-gray-500 mb-1">Name *</label>
           <input
             type="text"
-            value={profile.name ?? ""}
-            onChange={e => setProfile({ ...profile, name: e.target.value })}
+            value={form.name ?? ""}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-gray-900 text-black"
           />
         </div>
@@ -156,18 +151,20 @@ export default function ProfilePage() {
           <label className="block text-xs text-gray-500 mb-1">Email</label>
           <input
             type="email"
-            value={profile.email ?? ""}
-            onChange={e => setProfile({ ...profile, email: e.target.value })}
+            value={form.email ?? ""}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-gray-900 text-black"
           />
         </div>
 
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Date of birth</label>
+          <label className="block text-xs text-gray-500 mb-1">
+            Date of birth
+          </label>
           <input
             type="date"
-            value={profile.dob ?? ""}
-            onChange={e => setProfile({ ...profile, dob: e.target.value })}
+            value={form.dob ?? ""}
+            onChange={(e) => setForm({ ...form, dob: e.target.value })}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-gray-900 text-black"
           />
         </div>
@@ -175,8 +172,8 @@ export default function ProfilePage() {
         <div>
           <label className="block text-xs text-gray-500 mb-1">Gender</label>
           <select
-            value={profile.gender ?? ""}
-            onChange={e => setProfile({ ...profile, gender: e.target.value })}
+            value={form.gender ?? ""}
+            onChange={(e) => setForm({ ...form, gender: e.target.value })}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-gray-900 text-black"
           >
             <option value="">Select</option>

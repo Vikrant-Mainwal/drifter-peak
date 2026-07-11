@@ -5,18 +5,14 @@ import { Trash2 } from "lucide-react";
 import { useCartStore } from "../../../features/cart/lib/store/cartStore";
 import { formatPrice } from "@/lib/utils";
 import { Footer } from "@/components/layout/Footer";
-import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, loading } = useCartStore();
-  const { user, loading: authLoading } = useAuth();
-
-  useEffect(() => {
-    if (!authLoading) {
-      useCartStore.getState().loadCart(user?.id ?? null);
-    }
-  }, [user, authLoading]);
+  // Cart loading itself is centrally handled by CartSyncProvider (in
+  // app/(public)/layout.tsx) whenever the logged-in user changes — this
+  // page only needs auth state to know when to show its own loading state.
+  const { loading: authLoading } = useAuth();
 
   const subtotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -108,7 +104,7 @@ export default function CartPage() {
                     }}
                   >
                     <Link
-                      href={`/product/${item.slug}`}
+                      href={`/product/${item.slug || item.product_id}`}
                       className="relative aspect-square overflow-hidden block"
                       style={{ background: "var(--card)" }}
                     >
@@ -122,7 +118,7 @@ export default function CartPage() {
                     </Link>
 
                     <div>
-                      <Link href={`/product/${item.slug}`}>
+                      <Link href={`/product/${item.slug || item.product_id}`}>
                         <p
                           className="font-display text-xl uppercase tracking-wide mb-1"
                           style={{ color: "var(--fg)" }}

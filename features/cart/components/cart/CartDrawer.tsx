@@ -104,7 +104,7 @@ export function CartDrawer() {
                 }}
               >
                 <Link
-                  href={`/product/${item.slug}`}
+                  href={`/product/${item.slug || item.product_id}`}
                   onClick={closeCart}
                   className="relative w-20 h-24 flex-shrink-0 overflow-hidden block"
                   style={{ background: "var(--card)" }}

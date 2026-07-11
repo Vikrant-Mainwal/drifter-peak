@@ -18,9 +18,9 @@ export default function PaymentSuccessPage() {
         </div>
 
         {/* Title */}
-        <h1 className="text-2xl font-semibold mb-2">
+        <h3 className="text-2xl font-semibold mb-2">
           Payment Successful
-        </h1>
+        </h3>
 
         {/* Subtitle */}
         <p className="text-neutral-400 text-sm mb-4">

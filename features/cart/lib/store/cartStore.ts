@@ -17,6 +17,10 @@ interface CartStore {
   isOpen: boolean;
   loading: boolean;
   cartId: string | null;
+  /** The user id the cart is currently synced to, or null for guest/none.
+   *  Used by loadCart() to skip redundant reloads (and the loading flash
+   *  that comes with them) when it's called again for the same user. */
+  loadedForUserId: string | null;
 
   hydrated: boolean;
   setHydrated: (value: boolean) => void;
@@ -63,6 +67,7 @@ export const useCartStore = create<CartStore>()(
       isOpen: false,
       loading: false,
       cartId: null,
+      loadedForUserId: null,
 
       hydrated: false,
       setHydrated: (value) => set({ hydrated: value }),
@@ -139,23 +144,36 @@ export const useCartStore = create<CartStore>()(
       closeCart: () => set({ isOpen: false }),
 
       loadCart: async (userId) => {
+        const { loading, loadedForUserId } = get();
+
         if (!userId) {
-          set({
-            cartId: null,
-            loading: false,
-          });
+          if (loadedForUserId === null) return;
+          set({ cartId: null, items: [], loading: false, loadedForUserId: null });
           return;
         }
+
+        // Already synced to this exact user — nothing to do. This is what
+        // stops a redundant loadCart() call (e.g. from an auth event firing
+        // again for the same user) from flashing the cart back to a loading
+        // state and re-hitting the DB for no reason.
+        if (loadedForUserId === userId) return;
+
+        // A load for this user is already in flight — let it finish
+        // instead of racing a second, overlapping fetch.
+        if (loading) return;
 
         set({ loading: true });
         try {
           const cartId = await getOrCreateCart(userId);
-          const guestItems = get().items;
+          const { cartId: currentCartId, items: currentItems } = get();
 
-          if (guestItems.length > 0) {
+          // Only merge if we haven't already synced to this cart in this session
+          const alreadyLoaded = currentCartId === cartId;
+
+          if (!alreadyLoaded && currentItems.length > 0) {
             await mergeGuestCartToDb(
               cartId,
-              guestItems.map((i) => ({
+              currentItems.map((i) => ({
                 variant_id: i.variant_id,
                 quantity: i.quantity,
               })),
@@ -163,7 +181,7 @@ export const useCartStore = create<CartStore>()(
           }
 
           const dbItems = await fetchCartItems(cartId);
-          set({ items: dbItems, cartId, loading: false });
+          set({ items: dbItems, cartId, loading: false, loadedForUserId: userId });
         } catch (e) {
           console.error("loadCart failed", e);
           set({ loading: false });
@@ -181,6 +199,7 @@ export const useCartStore = create<CartStore>()(
 
       partialize: (state) => ({
         items: state.items,
+        cartId: state.cartId,
       }),
 
       onRehydrateStorage: () => (state) => {

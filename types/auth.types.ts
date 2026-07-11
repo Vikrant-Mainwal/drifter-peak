@@ -1,14 +1,9 @@
-export type Role = "admin" | "user";
-
-export interface UserProfile {
+export type UserProfile = {
   id: string;
-  email: string;
-  role: Role;
-  created_at?: string;
-}
-
-export interface AuthState {
-  user: UserProfile | null;
-  loading: boolean;
-  error: string | null;
-}
+  phone: string;
+  name: string | null;
+  email: string | null;
+  photo_url: string | null;
+  dob: string | null;
+  gender: string | null;
+};

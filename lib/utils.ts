@@ -101,3 +101,18 @@ export const formatPrice = (price: number) =>
     currency: "INR",
     maximumFractionDigits: 0,
   }).format(price);
+
+/**
+ * Product slugs are optional and may be null in the DB — product id always
+ * exists. This is the single place that decides the priority (slug first,
+ * id as the guaranteed fallback) for building a product's URL, so every
+ * card/link in the app resolves consistently instead of each component
+ * re-implementing (and sometimes getting backwards) its own fallback.
+ */
+export const getProductHref = (product: {
+  id: string;
+  slug?: string | null;
+}) => `/product/${product.slug || product.id}`;
+
+/** Falls back to a placeholder when a product/variant has no media yet. */
+export const PLACEHOLDER_IMAGE = "/placeholder.png";

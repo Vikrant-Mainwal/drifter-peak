@@ -11,7 +11,7 @@ export function CartSyncProvider({ children }: { children: React.ReactNode }) {
     if (!loading) {
       useCartStore.getState().loadCart(user?.id ?? null);
     }
-  }, [user, loading]);
+  }, [user?.id, loading]);
 
   return <>{children}</>;
 }
