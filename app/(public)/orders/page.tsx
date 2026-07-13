@@ -1,11 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { Package } from 'lucide-react';
-import { OrderCard } from '@/components/orders/OrderCard';
+import { OrderCard, getOrders, type Order } from '@/features/order';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PageSpinner } from '@/components/ui/Spinner';
-import { getOrders } from '@/lib/supabase/queries/orders';
-import type { Order } from '@/types';
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);

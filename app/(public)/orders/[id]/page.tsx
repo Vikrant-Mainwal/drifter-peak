@@ -5,9 +5,13 @@ import Image from "next/image";
 import { ArrowLeft, MapPin } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { PageSpinner } from "@/components/ui/Spinner";
-import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
-import { getOrderById } from "@/lib/supabase/queries/orders";
-import type { Order } from "@/types";
+import {
+  OrderStatusBadge,
+  CancelOrderButton,
+  getOrderById,
+  type Order,
+} from "@/features/order";
+import { PLACEHOLDER_IMAGE } from "@/lib/utils";
 
 export default function OrderDetailPage({
   params,
@@ -64,6 +68,10 @@ export default function OrderDetailPage({
         <OrderStatusBadge status={order.status} />
       </div>
 
+      <div className="mb-8">
+        <CancelOrderButton order={order} onCancelled={setOrder} />
+      </div>
+
       <div className="space-y-5">
         {/* Items */}
         <Card>
@@ -75,7 +83,7 @@ export default function OrderDetailPage({
               <div key={item.id} className="flex gap-4 items-center">
                 <div className="relative w-16 h-20 bg-neutral-100 flex-shrink-0 overflow-hidden">
                   <Image
-                    src={item.thumbnail_url || "/placeholder.png"}
+                    src={item.thumbnail_url || PLACEHOLDER_IMAGE}
                     alt={item.product_name}
                     fill
                     className="object-cover"

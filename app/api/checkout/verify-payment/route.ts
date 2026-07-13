@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { verifyRazorpaySignature } from "@/lib/razorpay/verify";
-import type { VerifyPaymentPayload } from "@/types/index";
+import type { VerifyPaymentPayload } from "@/features/payment/types";
 
 export async function POST(req: Request) {
   const supabase = await createClient();

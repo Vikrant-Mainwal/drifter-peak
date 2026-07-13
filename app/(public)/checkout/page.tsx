@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useCartStore } from "@/features/cart/lib/store/cartStore";
 import type { AppliedCoupon } from "@/features/checkout/types/checkout";
 import { computeOrderTotals } from "@/features/checkout/lib/pricing";
-import { loadRazorpayScript } from "../../../features/checkout/lib/razorpayCheckout";
+import { initiateRazorpayPayment } from "@/features/payment";
 import { CheckoutSummary } from "@/features/checkout/components/CheckoutSummary";
 import { PriceBreakdown } from "@/features/checkout/components/PriceBreakdown";
 import { AddressCard } from "@/features/checkout/components/AddressCard";
@@ -67,66 +67,29 @@ export default function CheckoutPage() {
     setPlacingOrder(true);
 
     try {
-      const res = await fetch("/api/checkout/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address_id: selectedAddress.id }),
+      const result = await initiateRazorpayPayment({
+        addressId: selectedAddress.id,
+        customerName: selectedAddress.name,
+        customerPhone: selectedAddress.phone,
       });
-      const data = await res.json();
 
-      if (!res.ok) {
-        show(data.error ?? "Couldn't start checkout", "error");
-        setPlacingOrder(false);
+      if (result.ok && result.orderId) {
+        await useCartStore.getState().clearCart();
+        router.push(`/payment/success?order_id=${result.orderId}`);
         return;
       }
 
-      const scriptLoaded = await loadRazorpayScript();
-      if (!scriptLoaded) {
-        show("Couldn't load the payment gateway. Check your connection.", "error");
-        setPlacingOrder(false);
+      setPlacingOrder(false);
+
+      // Shopper closed the Razorpay modal themselves — no error to show.
+      if (result.error === "dismissed") return;
+
+      if (result.orderId) {
+        router.push(`/payment/failure?order_id=${result.orderId}`);
         return;
       }
 
-      const rzp = new window.Razorpay({
-        key: data.key_id,
-        amount: data.amount,
-        currency: data.currency,
-        order_id: data.razorpay_order_id,
-        name: "Drifter Peak",
-        description: `Order ${data.order_id.slice(0, 8).toUpperCase()}`,
-        prefill: {
-          name: selectedAddress.name,
-          contact: selectedAddress.phone,
-        },
-        theme: { color: "#000000" },
-        handler: async (response: {
-          razorpay_order_id: string;
-          razorpay_payment_id: string;
-          razorpay_signature: string;
-        }) => {
-          try {
-            const verifyRes = await fetch("/api/checkout/verify-payment", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ ...response, order_id: data.order_id }),
-            });
-            if (!verifyRes.ok) throw new Error("verification failed");
-            await useCartStore.getState().clearCart();
-            router.push(`/payment/success?order_id=${data.order_id}`);
-          } catch {
-            router.push(`/payment/failure?order_id=${data.order_id}`);
-          }
-        },
-        modal: {
-          ondismiss: () => setPlacingOrder(false),
-        },
-      });
-
-      rzp.on("payment.failed", () => {
-        router.push(`/payment/failure?order_id=${data.order_id}`);
-      });
-
-      rzp.open();
+      show(result.error ?? "Couldn't start checkout", "error");
     } catch {
       show("Something went wrong. Please try again.", "error");
       setPlacingOrder(false);

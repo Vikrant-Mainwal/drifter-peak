@@ -2,7 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 import { OrderStatusBadge } from "./OrderStatusBadge";
-import type { Order } from "@/types/index";
+import type { Order } from "../types";
+import { PLACEHOLDER_IMAGE } from "@/lib/utils";
 
 export function OrderCard({ order }: { order: Order }) {
   const date = new Date(order.created_at).toLocaleDateString("en-IN", {
@@ -12,26 +13,6 @@ export function OrderCard({ order }: { order: Order }) {
   });
   const preview = order.order_items?.slice(0, 3) ?? [];
 
-  const getImageUrl = (img: any): string => {
-    if (!img) return "/placeholder.png"; // fallback
-
-    try {
-      // If already array
-      if (Array.isArray(img)) return img[0];
-
-      // If stringified array
-      if (typeof img === "string" && img.startsWith("[")) {
-        const parsed = JSON.parse(img);
-        return Array.isArray(parsed) ? parsed[0] : img;
-      }
-
-      // Normal string
-      return img;
-    } catch {
-      return "/placeholder.png";
-    }
-  };
-
   return (
     <Link href={`/orders/${order.id}`}>
       <div className="border border-neutral-200 p-5 hover:border-neutral-400 transition-colors">
@@ -39,8 +20,12 @@ export function OrderCard({ order }: { order: Order }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
               <OrderStatusBadge status={order.status} />
+              {/* order_number (e.g. DP-2026-000001) is the backend's
+                  purpose-built customer-facing identifier — see
+                  generate_order_number() — not a slice of the internal
+                  UUID, which is what this showed before. */}
               <span className="text-xs text-neutral-500">
-                #{order.id.slice(0, 8).toUpperCase()}
+                {order.order_number}
               </span>
               <span className="text-xs text-neutral-500">{date}</span>
             </div>
@@ -52,7 +37,7 @@ export function OrderCard({ order }: { order: Order }) {
                   className="relative w-12 h-14 bg-neutral-100 overflow-hidden flex-shrink-0"
                 >
                   <Image
-                    src={getImageUrl(item.thumbnail_url)}
+                    src={item.thumbnail_url || PLACEHOLDER_IMAGE}
                     alt={item.product_name}
                     fill
                     className="object-cover"

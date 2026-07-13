@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { razorpay } from "@/lib/razorpay/client";
-import type { Order } from "@/types";
+import type { Order } from "@/features/order/types";
 
 
 

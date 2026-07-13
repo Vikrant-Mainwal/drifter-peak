@@ -1,18 +1,30 @@
-// Address types live in one place — features/address/types.ts — and are
-// re-exported here so code outside the address feature can import them
-// from "@/types" without a second, drifting definition of the same shape.
-export type { Address, AddressInsert, AddressUpdate, AddressType } from "@/features/address/types";
-
+/**
+ * Matches supabase/migrations/20260703115122_create_orders_system.sql
+ * exactly — orders_status_check constraint:
+ *   'pending_payment' | 'paid' | 'processing' | 'packed' | 'shipped' |
+ *   'delivered' | 'cancelled' | 'returned' | 'exchanged'
+ *
+ * The previous version of this type (pending/confirmed/refunded, etc.)
+ * didn't match the database at all, so OrderStatusBadge never rendered a
+ * real order's actual status correctly.
+ */
 export type OrderStatus =
-  | "pending"
-  | "confirmed"
+  | "pending_payment"
+  | "paid"
   | "processing"
+  | "packed"
   | "shipped"
   | "delivered"
   | "cancelled"
-  | "refunded";
+  | "returned"
+  | "exchanged";
 
-export type PaymentStatus = "pending" | "success" | "failed" | "refunded";
+/** Statuses cancel_order() in the backend will actually accept. */
+export const CANCELLABLE_STATUSES: readonly OrderStatus[] = [
+  "pending_payment",
+  "paid",
+  "processing",
+];
 
 export interface Order {
   id: string;
@@ -35,7 +47,7 @@ export interface Order {
   discount_amount: number;
   total_amount: number;
 
-  payment_method: string | null;
+  payment_method: string;
   razorpay_order_id: string | null;
   razorpay_payment_id: string | null;
   razorpay_signature: string | null;
@@ -44,7 +56,7 @@ export interface Order {
   paid_at: string | null;
   cancelled_at: string | null;
   cancelled_reason: string | null;
-  cancelled_by: string | null;
+  cancelled_by: "user" | "admin" | "system" | null;
 
   created_at: string;
   updated_at: string;
@@ -57,34 +69,23 @@ export interface OrderItem {
   order_id: string;
   variant_id: string;
   product_id: string;
+
+  // Snapshot fields, frozen at checkout — see checkout_cart() in
+  // 20260703115228_create_checkout_system.sql. product_slug is nullable
+  // because products.slug itself is nullable (`slug text unique`, no
+  // NOT NULL) — a product without a slug at purchase time snapshots as
+  // NULL here too, by design.
   product_name: string;
   product_slug: string | null;
   sku: string | null;
-  size: string;
+  size: string | null;
   color: string | null;
   thumbnail_url: string | null;
+
   unit_price: number;
   mrp: number;
   quantity: number;
   line_total: number;
+
   created_at: string;
-}
-
-export interface CreateOrderPayload {
-  address_id: string;
-}
-
-export interface RazorpayOrderResponse {
-  razorpay_order_id: string;
-  amount: number;
-  currency: string;
-  order_id: string; // our DB order id
-  key_id: string;
-}
-
-export interface VerifyPaymentPayload {
-  razorpay_order_id: string;
-  razorpay_payment_id: string;
-  razorpay_signature: string;
-  order_id: string;
 }
