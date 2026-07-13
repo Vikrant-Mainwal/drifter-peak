@@ -66,7 +66,7 @@ export function Footer() {
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center pt-8 border-t gap-4" style={{ borderColor: "var(--border)" }}>
           <p className="font-mono text-[10px] tracking-[0.2em]" style={{ color: "var(--muted)" }}>© 2026 DRIFTER PEAK. ALL RIGHTS RESERVED.</p>
-          <p className="font-mono text-[10px] tracking-[0.2em]" style={{ color: "var(--muted)" }}>NOT FOR EVERYONE.</p>
+          {/* <p className="font-mono text-[10px] tracking-[0.2em]" style={{ color: "var(--muted)" }}>NOT FOR EVERYONE.</p> */}
         </div>
       </div>
     </footer>
