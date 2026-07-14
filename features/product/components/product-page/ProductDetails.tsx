@@ -133,14 +133,14 @@ export default function ProductDetails({ product, variants, image }: Props) {
           ₹{displayPrice.toLocaleString("en-IN")}
         </span>
         {displayPrice < product.mrp && (
-          <>
+          <div className="flex items-baseline gap-2.5">
             <span className="text-sm text-neutral-400 line-through">
               ₹{product.mrp.toLocaleString("en-IN")}
             </span>
             <span className="text-sm text-green-600 font-medium">
               {discountPct}% off
             </span>
-          </>
+          </div>
         )}
       </div>
 
