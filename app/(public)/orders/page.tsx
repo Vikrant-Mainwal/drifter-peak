@@ -10,8 +10,13 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getOrders().then(setOrders).finally(() => setLoading(false));
-  }, []);
+  getOrders()
+    .then(setOrders)
+    .catch((err) => {
+      console.error("Failed to load orders:", err);
+    })
+    .finally(() => setLoading(false));
+}, []);
 
   if (loading) return <PageSpinner />;
 

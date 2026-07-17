@@ -118,9 +118,9 @@ export default function ProductDetails({ product, variants, image }: Props) {
       )}
 
       {/* Title */}
-      <h1 className="text-2xl md:text-[28px] font-semibold leading-snug text-neutral-900">
+      <h2 className="text-2xl md:text-[28px] font-semibold leading-snug text-neutral-900">
         {product.detail_title ?? product.list_title}
-      </h1>
+      </h2>
 
       {/* Slogan */}
       {product.slogan && (

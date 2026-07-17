@@ -22,6 +22,8 @@ interface CartStore {
    *  that comes with them) when it's called again for the same user. */
   loadedForUserId: string | null;
 
+  syncError: string | null;
+
   hydrated: boolean;
   setHydrated: (value: boolean) => void;
 
@@ -37,6 +39,7 @@ interface CartStore {
 
   total: () => number;
   count: () => number;
+  
 }
 
 const pendingSync = new Map<string, ReturnType<typeof setTimeout>>();
@@ -68,6 +71,7 @@ export const useCartStore = create<CartStore>()(
       loading: false,
       cartId: null,
       loadedForUserId: null,
+      syncError: null,
 
       hydrated: false,
       setHydrated: (value) => set({ hydrated: value }),
@@ -147,29 +151,28 @@ export const useCartStore = create<CartStore>()(
         const { loading, loadedForUserId } = get();
 
         if (!userId) {
+          // Guest: keep whatever's in localStorage as-is, untouched.
           if (loadedForUserId === null) return;
-          set({ cartId: null, items: [], loading: false, loadedForUserId: null });
+          set({
+            cartId: null,
+            items: [],
+            loading: false,
+            loadedForUserId: null,
+          });
           return;
         }
 
-        // Already synced to this exact user — nothing to do. This is what
-        // stops a redundant loadCart() call (e.g. from an auth event firing
-        // again for the same user) from flashing the cart back to a loading
-        // state and re-hitting the DB for no reason.
         if (loadedForUserId === userId) return;
-
-        // A load for this user is already in flight — let it finish
-        // instead of racing a second, overlapping fetch.
         if (loading) return;
 
-        set({ loading: true });
+        set({ loading: true, syncError: null });
+
         try {
           const cartId = await getOrCreateCart(userId);
           const { cartId: currentCartId, items: currentItems } = get();
-
-          // Only merge if we haven't already synced to this cart in this session
           const alreadyLoaded = currentCartId === cartId;
 
+          // Merge whatever was sitting in localStorage (guest cart) into the DB.
           if (!alreadyLoaded && currentItems.length > 0) {
             await mergeGuestCartToDb(
               cartId,
@@ -180,11 +183,29 @@ export const useCartStore = create<CartStore>()(
             );
           }
 
+          // DB is now authoritative — re-fetch and overwrite local state
+          // entirely. This IS what clears localStorage: the persist middleware
+          // saves whatever's in `items` on every set(), so replacing it with
+          // dbItems here means localStorage now holds only confirmed DB data,
+          // nothing else.
           const dbItems = await fetchCartItems(cartId);
-          set({ items: dbItems, cartId, loading: false, loadedForUserId: userId });
+          set({
+            items: dbItems,
+            cartId,
+            loading: false,
+            loadedForUserId: userId,
+          });
         } catch (e) {
           console.error("loadCart failed", e);
-          set({ loading: false });
+          // THE FIX: don't silently succeed. Leave loadedForUserId unset (so a
+          // retry/reload will try the merge again) and surface the failure —
+          // this is exactly what let last time's bug hide. Local items are
+          // deliberately left untouched here (not wiped) so a retry still has
+          // something to merge; showing an error is what makes that safe now.
+          set({
+            loading: false,
+            syncError: "Couldn't sync your cart. Please refresh and try again.",
+          });
         }
       },
 
