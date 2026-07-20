@@ -8,16 +8,18 @@ export function Footer() {
   return (
     <footer className="border-t py-16 px-6 md:px-12" style={{ borderColor: "var(--border)" }}>
       <div className="max-w-[1600px] mx-auto">
-        {/* Big text */}
-        <div className="mb-20 overflow-hidden">
+        <div className="mb-5">
+          <p className="text-[32px] font-semibold" >Drifter Peak</p>
+        </div>
+        {/* <div className="">
           <p
             // ref={ref as React.RefObject<HTMLParagraphElement>}
             className="reveal font-display text-[clamp(50px,10vw,150px)] leading-none tracking-tighter uppercase"
             style={{ color: "var(--fg)", opacity: 0.08 }}
           >
-            Build for Journey.
+            Drifter Peak
           </p>
-        </div>
+        </div> */}
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-16">
           <div>
@@ -55,7 +57,7 @@ export function Footer() {
               </Link>
             </div>
             <div className="mt-8">
-              <p className="font-mono text-[10px] tracking-[0.2em] mb-3" style={{ color: "var(--muted)" }}>JOIN THE MOVEMENT</p>
+              {/* <p className="font-mono text-[10px] tracking-[0.2em] mb-3" style={{ color: "var(--muted)" }}>JOIN THE MOVEMENT</p> */}
               {/* <div className="flex border" style={{ borderColor: "var(--border)" }}>
                 <input type="email" placeholder="your@email.com" className="flex-1 bg-transparent px-4 py-3 font-mono text-xs tracking-wider outline-none" style={{ color: "var(--fg)" }} />
                 <button className="btn-press px-4 py-3 font-mono text-xs tracking-wider" style={{ background: "var(--accent)", color: "var(--bg)" }}>→</button>
@@ -66,7 +68,7 @@ export function Footer() {
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center pt-8 border-t gap-4" style={{ borderColor: "var(--border)" }}>
           <p className="font-mono text-[10px] tracking-[0.2em]" style={{ color: "var(--muted)" }}>© 2026 DRIFTER PEAK. ALL RIGHTS RESERVED.</p>
-          {/* <p className="font-mono text-[10px] tracking-[0.2em]" style={{ color: "var(--muted)" }}>NOT FOR EVERYONE.</p> */}
+          <p className="font-mono text-[10px] tracking-[0.2em]" style={{ color: "var(--muted)" }}>Build for Journey.</p>
         </div>
       </div>
     </footer>

@@ -2,14 +2,38 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
+import { ShoppingCart, Zap, Heart, Minus, Plus, ShieldCheck } from "lucide-react";
 import type { Product, ProductVariant } from "@/features/product/types";
 import { useCartStore } from "@/features/cart/lib/store/cartStore";
 
 interface Props {
   product: Product;
   variants: ProductVariant[];
-  image: string; //  NEW: primary product image, passed from the server page
+  image: string;
+}
+
+// Small name -> hex lookup so color options render as real swatches.
+// Extend this list as new colors show up in the catalog.
+const COLOR_HEX: Record<string, string> = {
+  black: "#111111",
+  white: "#ffffff",
+  grey: "#9ca3af",
+  gray: "#9ca3af",
+  navy: "#1e2a44",
+  green: "#3f6b4f",
+  olive: "#5c5a3f",
+  beige: "#d8c9ae",
+  cream: "#f0e9dc",
+  brown: "#6b4a35",
+  red: "#b91c1c",
+  blue: "#2563eb",
+  maroon: "#6b1d2b",
+};
+
+function colorToHex(name: string) {
+  return COLOR_HEX[name.trim().toLowerCase()] ?? "#d4d4d4";
 }
 
 export default function ProductDetails({ product, variants, image }: Props) {
@@ -47,6 +71,8 @@ export default function ProductDetails({ product, variants, image }: Props) {
   const [selectedSize, setSelectedSize] = useState("");
   const [showSizeChart, setShowSizeChart] = useState(false);
   const [added, setAdded] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const [wishlisted, setWishlisted] = useState(false);
 
   const selectedVariant = useMemo(() => {
     if (!selectedSize) return null;
@@ -70,6 +96,10 @@ export default function ProductDetails({ product, variants, image }: Props) {
       ? Math.round(((product.mrp - displayPrice) / product.mrp) * 100)
       : 0;
 
+  const isBestSeller = product.tags?.some(
+    (t) => t.toLowerCase().replace(/\s/g, "") === "bestseller",
+  );
+
   function isAvailable(size: string) {
     const v = variants.find(
       (v) => v.color === selectedColor && v.size === size,
@@ -90,6 +120,7 @@ export default function ProductDetails({ product, variants, image }: Props) {
       color: selectedVariant.color ?? null,
       image,
       stock: selectedVariant.stock,
+      quantity,
     };
   }
 
@@ -110,6 +141,34 @@ export default function ProductDetails({ product, variants, image }: Props) {
 
   return (
     <div>
+      {/* Breadcrumb */}
+      <nav className="hidden md:flex items-center gap-1.5 text-xs text-neutral-400 mb-4">
+        <Link href="/" className="hover:text-neutral-600">
+          Home
+        </Link>
+        {product.gender && (
+          <>
+            <span>/</span>
+            <span className="capitalize">{product.gender}</span>
+          </>
+        )}
+        {product.category && (
+          <>
+            <span>/</span>
+            <span className="capitalize">{product.category}</span>
+          </>
+        )}
+        <span>/</span>
+        <span className="text-neutral-600">{product.list_title}</span>
+      </nav>
+
+      {/* Best Seller badge */}
+      {isBestSeller && (
+        <span className="inline-block mb-2 rounded px-2.5 py-1 text-[11px] font-medium bg-orange-50 text-orange-600">
+          Best Seller
+        </span>
+      )}
+
       {/* Brand */}
       {product.brand && (
         <p className="text-[11px] uppercase tracking-[0.12em] text-neutral-400 mb-1.5">
@@ -127,9 +186,21 @@ export default function ProductDetails({ product, variants, image }: Props) {
         <p className="text-sm text-neutral-500 mt-1">{product.slogan}</p>
       )}
 
+      {/* Rating / review count / sold — wire in once the reviews table exists
+      <div className="flex items-center gap-2 mt-2 text-sm text-neutral-600">
+        <span className="flex items-center gap-1 text-amber-500">
+          <Star className="w-4 h-4 fill-amber-400 stroke-amber-400" />
+          {product.rating}
+        </span>
+        <span className="text-neutral-400">({product.review_count} reviews)</span>
+        <span className="text-neutral-300">|</span>
+        <span className="text-neutral-400">Sold {product.sold_count}+</span>
+      </div>
+      */}
+
       {/* Price */}
       <div className="flex items-baseline gap-2.5 mt-4">
-        <span className="text-xl font-semibold text-neutral-900">
+        <span className="text-2xl font-semibold text-neutral-900">
           ₹{displayPrice.toLocaleString("en-IN")}
         </span>
         {displayPrice < product.mrp && (
@@ -137,43 +208,51 @@ export default function ProductDetails({ product, variants, image }: Props) {
             <span className="text-sm text-neutral-400 line-through">
               ₹{product.mrp.toLocaleString("en-IN")}
             </span>
-            <span className="text-sm text-green-600 font-medium">
-              {discountPct}% off
+            <span className="text-sm text-orange-600 font-medium">
+              {discountPct}% OFF
             </span>
           </div>
         )}
       </div>
+      <p className="text-xs text-neutral-400 mt-1">Inclusive of all taxes</p>
 
-      {/*   Color     */}
+      {/* Color — circular swatches */}
       {hasColors && (
         <div className="mt-6">
           <p className="text-[11px] uppercase tracking-[0.1em] text-neutral-400 mb-2">
-            Colour
+            Color:{" "}
+            <span className="normal-case text-neutral-700 font-medium">
+              {selectedColor}
+            </span>
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             {allColors.map((color) => (
               <button
                 key={color}
+                title={color}
                 onClick={() => {
                   setSelectedColor(color);
                   setSelectedSize("");
                 }}
-                className={`px-3 py-1 rounded text-sm border transition-all duration-150 ${
+                className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-150 ${
                   selectedColor === color
-                    ? "bg-black text-white border-black"
-                    : "bg-white text-black border-gray-300 hover:border-black"
+                    ? "border-neutral-900"
+                    : "border-transparent"
                 }`}
               >
-                {color}
+                <span
+                  className="w-6 h-6 rounded-full border border-black/10"
+                  style={{ backgroundColor: colorToHex(color) }}
+                />
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/*   Size     */}
+      {/* Size */}
       {hasSizes && (
-        <div className="mt-5">
+        <div className="mt-5" id="size-selector">
           <div className="flex items-center justify-between mb-2">
             <p className="text-[11px] uppercase tracking-[0.1em] text-neutral-400">
               Size
@@ -183,7 +262,7 @@ export default function ProductDetails({ product, variants, image }: Props) {
                 onClick={() => setShowSizeChart(true)}
                 className="text-xs text-neutral-500 underline underline-offset-2"
               >
-                Size chart
+                Size Guide
               </button>
             )}
           </div>
@@ -202,8 +281,8 @@ export default function ProductDetails({ product, variants, image }: Props) {
                     active
                       ? "bg-neutral-900 border-neutral-900 text-white"
                       : available
-                        ? "border-neutral-900 text-black"
-                        : "bg-black text-white"
+                        ? "border-neutral-300 text-black hover:border-neutral-900"
+                        : "border-neutral-100 text-neutral-300 cursor-not-allowed"
                   }`}
                 >
                   {size}
@@ -246,15 +325,54 @@ export default function ProductDetails({ product, variants, image }: Props) {
         </div>
       )}
 
-      {/*   CTA buttons    */}
-      <div className="mt-6 flex flex-col gap-3">
+      {/* Stock / delivery info box */}
+      <div className="mt-5 flex items-start gap-2.5 rounded-lg border border-neutral-200 p-3.5">
+        <ShieldCheck className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
+        <div>
+          <p className="text-sm font-medium text-green-700">In Stock</p>
+          <p className="text-xs text-neutral-400 mt-0.5">
+            Delivery in 2-4 days &nbsp;|&nbsp; Free shipping on orders above
+            ₹999
+          </p>
+        </div>
+      </div>
+
+      {/* Quantity */}
+      <div className="mt-5 flex items-center gap-4">
+        <p className="text-[11px] uppercase tracking-[0.1em] text-neutral-400">
+          Quantity
+        </p>
+        <div className="flex items-center border border-neutral-300 rounded">
+          <button
+            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+            className="w-9 h-9 flex items-center justify-center text-neutral-600"
+            aria-label="Decrease quantity"
+          >
+            <Minus className="w-3.5 h-3.5" />
+          </button>
+          <span className="w-8 text-center text-sm">{quantity}</span>
+          <button
+            onClick={() => setQuantity((q) => q + 1)}
+            className="w-9 h-9 flex items-center justify-center text-neutral-600"
+            aria-label="Increase quantity"
+          >
+            <Plus className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* CTA buttons — side by side */}
+      <div id="product-cta" className="mt-6 flex gap-3">
         <button
           disabled={!selectedVariant}
           onClick={handleAddToCart}
-          className={`w-full py-4 rounded text-sm font-semibold tracking-[0.1em] transition-all duration-150 bg-black text-white ${
-            selectedVariant ? "active:scale-[0.98]" : "cursor-not-allowed"
+          className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded text-sm font-semibold tracking-[0.03em] border transition-all duration-150 ${
+            selectedVariant
+              ? "border-neutral-900 text-neutral-900 hover:bg-neutral-50 active:scale-[0.98]"
+              : "border-neutral-200 text-neutral-400 cursor-not-allowed"
           }`}
         >
+          <ShoppingCart className="w-4 h-4" />
           {hasSizes && !selectedSize
             ? "SELECT A SIZE"
             : added
@@ -264,54 +382,29 @@ export default function ProductDetails({ product, variants, image }: Props) {
         <button
           disabled={!selectedVariant}
           onClick={handleBuyNow}
-          className={`w-full py-4 rounded text-sm font-semibold tracking-[0.1em] border transition-all duration-150 ${
-            selectedVariant
-              ? "border-neutral-900 text-neutral-900 hover:bg-neutral-50 active:scale-[0.98]"
-              : "border-neutral-200 text-neutral-400 cursor-not-allowed"
+          className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded text-sm font-semibold tracking-[0.03em] bg-neutral-900 text-white transition-all duration-150 ${
+            selectedVariant ? "active:scale-[0.98]" : "opacity-40 cursor-not-allowed"
           }`}
         >
+          <Zap className="w-4 h-4" />
           BUY NOW
         </button>
       </div>
 
-      {/*   Perks     */}
-      <div className="mt-4 flex flex-col gap-1 text-xs text-neutral-400">
-        {product.is_returnable && <p>- Returnable</p>}
-        {product.is_exchangeable && (
-          <p>- Exchange within {product.exchange_window_days} days</p>
-        )}
-        <p>- Secure payments</p>
-      </div>
-
-      {/*   Description    */}
-      {product.description && (
-        <div className="mt-6 pt-6 border-t border-neutral-100">
-          <p className="text-sm text-neutral-600 leading-relaxed">
-            {product.description}
-          </p>
-        </div>
-      )}
-
-      {/*   Specs     */}
-      {product.specs && Object.keys(product.specs).length > 0 && (
-        <div className="mt-6 pt-6 border-t border-neutral-100">
-          <p className="text-xs uppercase tracking-[0.1em] text-neutral-400 mb-3">
-            Product specs
-          </p>
-          <table className="w-full text-sm">
-            <tbody>
-              {Object.entries(product.specs).map(([label, value]) => (
-                <tr key={label} className="border-b border-neutral-50">
-                  <td className="py-2 pr-4 text-neutral-400 align-top w-2/5">
-                    {label}
-                  </td>
-                  <td className="py-2 text-neutral-700">{value as string}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {/* Wishlist */}
+      <button
+        onClick={() => setWishlisted((w) => !w)}
+        className="mt-3 flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-700"
+      >
+        <Heart
+          className="w-4 h-4"
+          style={{
+            fill: wishlisted ? "#dc2626" : "transparent",
+            stroke: wishlisted ? "#dc2626" : "currentColor",
+          }}
+        />
+        Add to Wishlist
+      </button>
     </div>
   );
 }

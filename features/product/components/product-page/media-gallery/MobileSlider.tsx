@@ -309,7 +309,7 @@ function MobileSlider({
                 <button
                   aria-label="Previous image"
                   onClick={() => commitSlide(activeIdx - 1)}
-                  className="absolute left-1 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm active:scale-95 transition-transform"
+                  className="absolute left-1 top-1/3 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm active:scale-95 transition-transform"
                 >
                   <ChevronLeft className="h-4 w-4 text-neutral-800" />
                 </button>
@@ -320,7 +320,7 @@ function MobileSlider({
                 <button
                   aria-label="Next image"
                   onClick={() => commitSlide(activeIdx + 1)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm active:scale-95 transition-transform"
+                  className="absolute right-2 top-1/3 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm active:scale-95 transition-transform"
                 >
                   <ChevronRight className="h-4 w-4 text-neutral-800" />
                 </button>

@@ -2,7 +2,12 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import MediaGallery from "@/features/product/components/product-page/MediaGallery";
 import ProductDetails from "@/features/product/components/product-page/ProductDetails";
-import { getProductBySlugOrId } from "@/features/product/api/getProduct";
+import ProductTabs from "@/features/product/components/product-page/ProductTabs";
+import RelatedProducts from "@/features/product/components/product-page/RelatedProducts";
+import {
+  getProductBySlugOrId,
+  getRelatedProducts,
+} from "@/features/product/api/getProduct";
 import { PLACEHOLDER_IMAGE } from "@/lib/utils";
 import type { ProductMedia } from "@/features/product/types";
 
@@ -30,6 +35,7 @@ export default async function ProductPage({ params }: Props) {
     .order("sort_order", { ascending: true });
 
   const sortedMedia: ProductMedia[] = media ?? [];
+  const relatedProducts = await getRelatedProducts(supabase, product);
 
   return (
     <main>
@@ -54,6 +60,11 @@ export default async function ProductPage({ params }: Props) {
             image={sortedMedia[0]?.url ?? PLACEHOLDER_IMAGE}
           />
         </div>
+      </div>
+
+      <div className="px-5 md:px-8 max-w-7xl mx-auto">
+        <ProductTabs product={product} />
+        <RelatedProducts products={relatedProducts} />
       </div>
     </main>
   );

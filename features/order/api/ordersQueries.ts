@@ -3,15 +3,17 @@ import type { Order } from "../types";
 
 export async function getOrders(): Promise<Order[]> {
   const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
 
   const { data, error } = await supabase
     .from("orders")
     .select("*, order_items(*)")
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-
-  return (data as Order[]) ?? [];
+  return data as Order[];
 }
 
 export async function getOrderById(id: string): Promise<Order | null> {

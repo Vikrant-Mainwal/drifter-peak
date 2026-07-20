@@ -10,10 +10,10 @@ import { CartIcon } from "@/features/cart/components/cart/CartIcon";
 import { useCartStore } from "../../features/cart/lib/store/cartStore";
 
 const navLinks = [
-  { label: "All", href: "/shop" },
-  { label: "Men", href: "/shop" },
-  { label: "Women", href: "/shop" },
-  { label: "Accessories", href: "/shop" },
+  { label: "All", href: "/" },
+  { label: "Men", href: "/" },
+  { label: "Women", href: "/" },
+  { label: "Accessories", href: "/" },
   { label: "Orders", href: "/orders" },
 ];
 
