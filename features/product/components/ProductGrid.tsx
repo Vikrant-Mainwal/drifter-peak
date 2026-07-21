@@ -1,42 +1,42 @@
 "use client";
 
 import { useState } from "react";
-import { CategoryFilter } from "./CategoryFilter";
+import { FilterBar } from "./filters";
 import { ProductCard } from "./ProductCard";
 import { ProductGridSkeleton } from "./ProductSkeleton";
 import { useInfiniteProducts } from "../hooks/useInfiniteProducts";
-import { FilterCategory } from "../types";
+import { FilterCategory, SortOption } from "../types";
 
 export function ProductGrid() {
   const [activeCategory, setActiveCategory] = useState<FilterCategory>("all");
+  const [activeSort, setActiveSort] = useState<SortOption>("newest");
 
   const { products, isLoading, isInitialLoading, hasMore, error, setSentinel } =
-    useInfiniteProducts(activeCategory);
-
-  const handleCategoryChange = (category: FilterCategory) => {
-    setActiveCategory(category);
-  };
+  useInfiniteProducts(activeCategory, activeSort);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Sticky filter bar */}
-      <div className="sticky top-[56px] md:top-[64px] z-30 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto py-3">
-          <CategoryFilter active={activeCategory} onChange={handleCategoryChange} />
-        </div>
-      </div>
-
       <div className="max-w-7xl mx-auto px-3 md:px-6 py-4">
-        {/* Category heading */}
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 capitalize">
-            {activeCategory === "all" ? "All Products" : activeCategory}
-          </h2>
-          {!isInitialLoading && (
-            <p className="text-sm text-gray-400">
-              {products.length} {products.length === 1 ? "item" : "items"} shown
-            </p>
-          )}
+        {/* Category heading + filter bar */}
+        <div className="mb-4 flex md:flex-row items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 capitalize">
+              {activeCategory === "all" ? "All Products" : activeCategory}
+            </h2>
+            {!isInitialLoading && (
+              <p className="text-sm text-gray-400">
+                {products.length} {products.length === 1 ? "item" : "items"}{" "}
+                shown
+              </p>
+            )}
+          </div>
+
+          <FilterBar
+            activeCategory={activeCategory}
+            onCategoryChange={setActiveCategory}
+            activeSort={activeSort}
+            onSortChange={setActiveSort}
+          />
         </div>
 
         {/* Error state */}
@@ -75,8 +75,13 @@ export function ProductGrid() {
               <>
                 {/* Product grid: 2 cols mobile, 4 cols desktop */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                  {products.map((product,i) => (
-                    <ProductCard key={product.id} product={product} large={i === 0 || i === 3} delay={i * 70}/>
+                  {products.map((product, i) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      large={i === 0 || i === 3}
+                      delay={i * 70}
+                    />
                   ))}
                 </div>
 

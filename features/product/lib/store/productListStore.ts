@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import type { FilterCategory, Product } from "../../types";
+import type { FilterCategory, Product, SortOption } from "../../types";
 
 // How long a cached page of products is considered fresh. Within this
 // window, remounting ProductGrid (e.g. navigating cart -> home) reuses the
@@ -66,6 +66,6 @@ export const useProductListStore = create<ProductListStore>((set, get) => ({
     }),
 }));
 
-export function listKey(category: FilterCategory, search?: string) {
-  return `${category}::${search ?? ""}`;
+export function listKey(category: FilterCategory, sort?: SortOption, search?: string) {
+  return `${category}::${sort ?? "newest"}::${search ?? ""}`;
 }

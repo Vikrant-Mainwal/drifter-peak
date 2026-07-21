@@ -30,7 +30,7 @@ export function Footer() {
               ))}
             </ul>
           </div>
-          <div>
+          {/* <div>
             <p className="font-mono text-[10px] tracking-[0.3em] mb-5" style={{ color: "var(--accent)" }}>BRAND</p>
             <ul className="space-y-3">
               {["Our Story","Manifesto","Sustainability","Press"].map(item => (
@@ -45,7 +45,7 @@ export function Footer() {
                 <li key={item}><Link href="#" className="font-body text-base hover-line" style={{ color: "var(--muted)" }}>{item}</Link></li>
               ))}
             </ul>
-          </div>
+          </div> */}
           <div>
             <p className="font-mono text-[10px] tracking-[0.3em] mb-5" style={{ color: "var(--accent)" }}>FOLLOW</p>
             <div className="flex flex-col gap-4">

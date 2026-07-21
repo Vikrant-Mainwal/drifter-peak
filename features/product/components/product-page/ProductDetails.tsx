@@ -345,16 +345,16 @@ export default function ProductDetails({ product, variants, image }: Props) {
         <div className="flex items-center border border-neutral-300 rounded">
           <button
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-            className="w-9 h-9 flex items-center justify-center text-neutral-600"
-            aria-label="Decrease quantity"
+            className={`w-9 h-9 flex items-center justify-center ${quantity===0 ? "opacity-30": "opacity-100"}`}
           >
             <Minus className="w-3.5 h-3.5" />
           </button>
           <span className="w-8 text-center text-sm">{quantity}</span>
           <button
+            disabled={quantity===5}
             onClick={() => setQuantity((q) => q + 1)}
-            className="w-9 h-9 flex items-center justify-center text-neutral-600"
-            aria-label="Increase quantity"
+            className={`w-9 h-9 flex items-center justify-center ${quantity===5 ? "opacity-30": "opacity-100"}`}
+            aria-label="Increase quantity" 
           >
             <Plus className="w-3.5 h-3.5" />
           </button>
@@ -392,7 +392,7 @@ export default function ProductDetails({ product, variants, image }: Props) {
       </div>
 
       {/* Wishlist */}
-      <button
+      {/* <button
         onClick={() => setWishlisted((w) => !w)}
         className="mt-3 flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-700"
       >
@@ -404,7 +404,7 @@ export default function ProductDetails({ product, variants, image }: Props) {
           }}
         />
         Add to Wishlist
-      </button>
+      </button> */}
     </div>
   );
 }

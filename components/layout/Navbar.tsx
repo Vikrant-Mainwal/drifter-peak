@@ -1,61 +1,84 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import {
+  Menu,
+  X,
+  Search,
+  User,
+  Heart,
+  // Plus,
+  // Minus,
+  Mountain,
+  LogOut,
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
 import { ToastContainer } from "@/components/ui/Toast";
 import { CartIcon } from "@/features/cart/components/cart/CartIcon";
 import { useCartStore } from "../../features/cart/lib/store/cartStore";
 
-const navLinks = [
-  { label: "All", href: "/" },
-  { label: "Men", href: "/" },
-  { label: "Women", href: "/" },
-  { label: "Accessories", href: "/" },
-  { label: "Orders", href: "/orders" },
+export const navLinks = [
+  // { label: "Shop", href: "/shop" },
+  { label: "Men", href: "/shop" },
+  { label: "Women", href: "/shop" },
+  { label: "Accessories", href: "/shop" },
 ];
 
 export function Navbar() {
+  const router = useRouter();
+
   const { user, profile, isLoggedIn, loading, signOut } = useAuth();
   const { toasts, show, dismiss } = useToast();
 
-  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 60);
-    window.addEventListener("scroll", handler, { passive: true });
-    return () => window.removeEventListener("scroll", handler);
-  }, []);
-
-  // useEffect(() => {
-  //   if (count > prevCount.current && badgeRef.current) {
-  //     badgeRef.current.classList.remove("anim-bounce-in");
-  //     void badgeRef.current.offsetWidth;
-  //     badgeRef.current.classList.add("anim-bounce-in");
-  //   }
-  //   prevCount.current = count;
-  // }, [count]);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleLogout = async () => {
     await signOut();
     setUserMenuOpen(false);
+    setMobileOpen(false);
     show("Signed out successfully", "info");
   };
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+    setSearchQuery("");
+    setSearchOpen(false);
+    setMobileOpen(false);
+  };
+
+  useEffect(() => {
+    if (mobileOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+
+      return () => {
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [mobileOpen]);
+
   return (
     <>
-      <header
-        className={`navbar sticky top-0 left-0 right-0 z-50 bg-white border-b border-gray-300`}
-      >
-        <div className="max-w-[1600px] mx-auto px-6 md:px-12 h-16 md:h-20 flex items-center justify-between">
+      <header className="navbar sticky top-0 left-0 right-0 z-50 bg-white border-b border-gray-300">
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12 h-16 md:h-20 flex items-center justify-between gap-6">
           {/* LOGO */}
-          <Link href="/">
+          <Link href="/" className="flex items-center gap-2 shrink-0">
+            {/* <Mountain size={scrolled ? 20 : 24} style={{ color: "var(--fg)" }} /> */}
             <div
-              className="font-display text-2xl md:text-3xl tracking-[0.15em] uppercase"
+              className="font-display uppercase tracking-[0.15em] text-2xl md:text-3xl"
               style={{ color: "var(--fg)" }}
             >
               DRIFTER PEAK
@@ -68,7 +91,7 @@ export function Navbar() {
               <Link
                 key={link.label}
                 href={link.href}
-                className="font-mono text-xs tracking-[0.25em] hover-line transition-colors duration-200"
+                className="font-mono text-sm tracking-[0.25em] hover-line transition-colors duration-200"
                 style={{ color: "var(--muted)" }}
               >
                 {link.label}
@@ -76,35 +99,49 @@ export function Navbar() {
             ))}
           </nav>
 
-          {/* ACTIONS */}
-          <div className="flex items-center gap-5">
-            {/* CART */}
-            {/* <button
-              onClick={openCart}
-              className="relative flex items-center gap-2 transition-opacity hover:opacity-70"
+          {/* SEARCH full length */}
+          <form
+            onSubmit={handleSearchSubmit}
+            className="hidden md:flex items-center flex-1 max-w-xs border px-3 py-1.5 rounded-md"
+            style={{ borderColor: "var(--border)" }}
+          >
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search products..."
+              className="flex-1 text-sm outline-none bg-transparent"
               style={{ color: "var(--fg)" }}
-            > */}
-            {/* <ShoppingBag size={18} />
-              {hydrated && count > 0 && (
-                <span
-                  ref={badgeRef}
-                  className="anim-bounce-in absolute -top-2 -right-2 w-4 h-4 font-mono text-[9px] flex items-center justify-center rounded-full"
-                  style={{
-                    background: "var(--accent)",
-                    color: "var(--bg)",
-                  }}
-                >
-                  {count}
-                </span>
-              )} */}
-            <CartIcon />
-            {/* </button> */}
+            />
+            <button type="submit" aria-label="Search">
+              <Search size={14} style={{ color: "var(--muted)" }} />
+            </button>
+          </form>
 
-            {/* AUTH */}
-            {!loading &&
-              (isLoggedIn ? (
-                <div className="relative">
-                  <button onClick={() => setUserMenuOpen((o) => !o)}>
+          {/* ACTIONS */}
+          <div className="flex items-center gap-5 shrink-0">
+            {/* SEARCH ICON (scrolled state, desktop) */}
+            {/* <button
+              className="hidden md:block"
+              onClick={() => setSearchOpen((o) => !o)}
+              aria-label="Search"
+              style={{ color: "var(--fg)" }}
+            >
+              <Search size={18} />
+            </button> */}
+
+            {/* AUTH ICON (desktop) */}
+            {!loading && (
+              <div className="relative hidden md:block">
+                <button
+                  onClick={() =>
+                    isLoggedIn
+                      ? setUserMenuOpen((o) => !o)
+                      : router.push("/login")
+                  }
+                  aria-label="Account"
+                >
+                  {isLoggedIn ? (
                     <div
                       className="w-6 h-6 rounded-full border flex items-center justify-center text-[10px]"
                       style={{
@@ -112,111 +149,253 @@ export function Navbar() {
                         color: "var(--fg)",
                       }}
                     >
-                      {(profile?.name?.[0] ?? user?.phone?.[0] ?? user?.email?.[0] ?? "?").toUpperCase()}
+                      {(
+                        profile?.name?.[0] ??
+                        user?.phone?.[0] ??
+                        user?.email?.[0] ??
+                        "?"
+                      ).toUpperCase()}
                     </div>
-                  </button>
-
-                  {userMenuOpen && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-30"
-                        onClick={() => setUserMenuOpen(false)}
-                      />
-
-                      <div
-                        className="absolute right-0 top-full mt-2 w-44 border z-40"
-                        style={{
-                          background: "var(--bg)",
-                          borderColor: "var(--border)",
-                        }}
-                      >
-                        <Link
-                          href="/profile"
-                          className="block w-full text-left px-4 py-2 text-[10px]"
-                          style={{ color: "var(--fg)" }}
-                        >
-                          Profile
-                        </Link>
-                        <Link
-                          href="/orders"
-                          onClick={() => setUserMenuOpen(false)}
-                          className="block px-4 py-2 text-[10px]"
-                        >
-                          ORDERS
-                        </Link>
-                        <button
-                          onClick={handleLogout}
-                          className="block w-full text-left px-4 py-2 text-[10px]"
-                        >
-                          LOGOUT
-                        </button>
-                      </div>
-                    </>
+                  ) : (
+                    <User size={18} style={{ color: "var(--fg)" }} />
                   )}
-                </div>
-              ) : (
-                <Link
-                  href="/login"
-                  className="hidden md:block text-[10px] tracking-[0.2em]"
-                  style={{ color: "var(--muted)" }}
-                >
-                  LOGIN
-                </Link>
-              ))}
+                </button>
 
-            {/* MOBILE MENU */}
+                {userMenuOpen && isLoggedIn && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-30"
+                      onClick={() => setUserMenuOpen(false)}
+                    />
+                    <div
+                      className="absolute right-0 top-full mt-2 w-44 border z-40"
+                      style={{
+                        background: "var(--bg)",
+                        borderColor: "var(--border)",
+                      }}
+                    >
+                      <Link
+                        href="/profile"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="block w-full text-left px-4 py-2 text-[10px]"
+                        style={{ color: "var(--fg)" }}
+                      >
+                        Profile
+                      </Link>
+                      <Link
+                        href="/orders"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="block px-4 py-2 text-[10px]"
+                      >
+                        ORDERS
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 text-[10px]"
+                      >
+                        LOGOUT
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* WISHLIST */}
+            <Link
+              href="/wishlist"
+              className="hidden md:block"
+              aria-label="Wishlist"
+            >
+              <Heart size={18} style={{ color: "var(--fg)" }} />
+            </Link>
+
+            <CartIcon />
+
+            {/* MOBILE MENU TOGGLE */}
             <button
               className="md:hidden"
               onClick={() => setMobileOpen(!mobileOpen)}
               style={{ color: "var(--fg)" }}
+              aria-label="Menu"
             >
               {mobileOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
+
+        {/* SEARCH bar*/}
+        {/* {searchOpen && (
+          <div
+            className="hidden md:block border-t"
+            style={{ borderColor: "var(--border)" }}
+          >
+            <form
+              onSubmit={handleSearchSubmit}
+              className="max-w-[1600px] mx-auto px-12 py-3 flex items-center gap-3"
+            >
+              <Search size={16} style={{ color: "var(--muted)" }} />
+              <input
+                autoFocus
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products..."
+                className="flex-1 text-sm outline-none bg-transparent"
+                style={{ color: "var(--fg)" }}
+              />
+            </form>
+          </div>
+        )} */}
       </header>
 
-      {/* MOBILE MENU */}
+      {/* MOBILE SIDE PANEL */}
       <div
-        className={`mobile-menu fixed inset-0 z-40 flex flex-col justify-center px-10 ${
-          mobileOpen ? "open" : ""
+        className={`fixed inset-0 z-40 md:hidden transition-opacity duration-200 ${
+          mobileOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         }`}
-        style={{ background: "var(--bg)" }}
       >
-        <nav className="space-y-5">
-          {navLinks.map((link, i) => (
-            <div
-              key={link.label}
-              className={`anim-fade-up ${mobileOpen ? "" : "opacity-0"}`}
-              style={{ animationDelay: `${i * 0.08}s` }}
-            >
-              <Link
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                className="font-display text-3xl uppercase tracking-tight"
+        {/* backdrop */}
+        <div
+          className="absolute inset-0 bg-black/40"
+          onClick={() => setMobileOpen(false)}
+        />
+
+        {/* panel */}
+        <div
+          className={`absolute top-0 left-0 h-full w-[85%] max-w-sm bg-white flex flex-col transition-transform duration-300 ${
+            mobileOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <div
+            className="flex items-center justify-between px-5 h-16 border-b"
+            style={{ borderColor: "var(--border)" }}
+          >
+            <div className="flex items-center gap-2">
+              <Mountain size={18} style={{ color: "var(--fg)" }} />
+              <span
+                className="font-display text-lg uppercase tracking-[0.1em]"
                 style={{ color: "var(--fg)" }}
               >
-                {link.label}
-              </Link>
+                Drifter Peak
+              </span>
             </div>
-          ))}
-
-          <div
-            className={`anim-fade-up ${mobileOpen ? "" : "opacity-0"}`}
-            style={{ animationDelay: "0.3s" }}
-          >
             <button
-              onClick={() => {
-                setMobileOpen(false);
-                useCartStore.getState().openCart();
-              }}
-              className="font-display text-3xl uppercase tracking-tight"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Close menu"
             >
-              CART
+              <X size={20} style={{ color: "var(--fg)" }} />
             </button>
           </div>
-          <button>Login</button>
-        </nav>
+
+          <nav className="flex-1 overflow-y-auto px-5 py-4 space-y-1">
+            {navLinks.map((link) => {
+              return (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="block py-3 text-base border-b"
+                  style={{ color: "var(--fg)", borderColor: "var(--border)" }}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+
+            <Link
+              href="/wishlist"
+              onClick={() => setMobileOpen(false)}
+              className="block py-3 text-base border-b"
+              style={{ color: "var(--fg)", borderColor: "var(--border)" }}
+            >
+              Favorites
+            </Link>
+
+            {isLoggedIn && (
+              <Link
+                href="/orders"
+                onClick={() => setMobileOpen(false)}
+                className="block py-3 text-base border-b"
+                style={{ color: "var(--fg)", borderColor: "var(--border)" }}
+              >
+                Orders
+              </Link>
+            )}
+          </nav>
+
+          {/* bottom bar */}
+          <div
+            className="border-t p-3 mx-2"
+            style={{ borderColor: "var(--border)" }}
+          >
+            {!loading &&
+              (isLoggedIn ? (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className="w-8 h-8 rounded-full border flex items-center justify-center text-xs shrink-0"
+                      style={{
+                        borderColor: "var(--border)",
+                        color: "var(--fg)",
+                      }}
+                    >
+                      {(
+                        profile?.name?.[0] ??
+                        user?.phone?.[0] ??
+                        user?.email?.[0] ??
+                        "?"
+                      ).toUpperCase()}
+                    </div>
+                    <p
+                      className="text-sm truncate"
+                      style={{ color: "var(--fg)" }}
+                    >
+                      {profile?.name ?? user?.phone ?? user?.email ?? "Account"}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    aria-label="Logout"
+                    className="shrink-0"
+                  >
+                    <LogOut size={18} style={{ color: "var(--fg)" }} />
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="block p-3 text-base text-center text-white rounded-md"
+                  style={{ background: "var(--muted)" }}
+                >
+                  Login
+                </Link>
+              ))}
+          </div>
+
+          {/* mobile search bar */}
+          {searchOpen && (
+            <form
+              onSubmit={handleSearchSubmit}
+              className="px-5 pb-4 flex items-center gap-2 border-t pt-3"
+              style={{ borderColor: "var(--border)" }}
+            >
+              <Search size={16} style={{ color: "var(--muted)" }} />
+              <input
+                autoFocus
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products..."
+                className="flex-1 text-sm outline-none bg-transparent"
+                style={{ color: "var(--fg)" }}
+              />
+            </form>
+          )}
+        </div>
       </div>
 
       {/* TOAST */}

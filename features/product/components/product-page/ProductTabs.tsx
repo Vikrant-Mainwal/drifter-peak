@@ -42,13 +42,13 @@ export default function ProductTabs({ product }: { product: Product }) {
   );
 
   return (
-    <div className="mt-12">
-      <div className="flex gap-8 border-b border-neutral-200 overflow-x-auto">
+    <div className="mt-12 p-10">
+      <div className="flex gap-8 border-b border-neutral-200">
         {TABS.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActive(tab.key)}
-            className={`relative pb-3 whitespace-nowrap text-sm font-medium transition-colors duration-150 ${
+            className={`relative pb-3 whitespace-nowrap text-md font-medium transition-colors duration-150 ${
               active === tab.key
                 ? "text-neutral-900"
                 : "text-neutral-400 hover:text-neutral-600"
@@ -67,12 +67,12 @@ export default function ProductTabs({ product }: { product: Product }) {
           {active === "description" && (
             <>
               {product.description && (
-                <p className="text-sm text-neutral-600 leading-relaxed mb-4">
+                <p className="text-md text-neutral-600 leading-relaxed mb-4">
                   {product.description}
                 </p>
               )}
               {specEntries.length > 0 && (
-                <ul className="space-y-1.5 text-sm text-neutral-700">
+                <ul className="space-y-1.5 text-md text-neutral-700">
                   {specEntries.map(([key, value]) => (
                     <li key={key}>
                       <span className="font-medium">
@@ -89,7 +89,7 @@ export default function ProductTabs({ product }: { product: Product }) {
           {active === "specifications" && (
             <>
               {specEntries.length > 0 ? (
-                <table className="w-full text-sm max-w-xl">
+                <table className="w-full text-md max-w-xl">
                   <tbody>
                     {specEntries.map(([key, value]) => (
                       <tr key={key} className="border-b border-neutral-100">
@@ -104,7 +104,7 @@ export default function ProductTabs({ product }: { product: Product }) {
                   </tbody>
                 </table>
               ) : (
-                <p className="text-sm text-neutral-400">
+                <p className="text-md text-neutral-400">
                   No specifications listed.
                 </p>
               )}
@@ -112,7 +112,7 @@ export default function ProductTabs({ product }: { product: Product }) {
           )}
 
           {active === "shipping" && (
-            <div className="max-w-xl space-y-3 text-sm text-neutral-600 leading-relaxed">
+            <div className="max-w-xl space-y-3 text-md text-neutral-600 leading-relaxed">
               <p>Delivery in 2-4 days. Free shipping on orders above ₹999.</p>
               <p>
                 {product.is_returnable
@@ -128,7 +128,7 @@ export default function ProductTabs({ product }: { product: Product }) {
           )}
 
           {active === "reviews" && (
-            <p className="text-sm text-neutral-400">
+            <p className="text-md text-neutral-400">
               No reviews yet.
               {/* Replace with real reviews once that table is queried in here */}
             </p>
@@ -145,7 +145,7 @@ export default function ProductTabs({ product }: { product: Product }) {
                   <p className="text-sm font-medium text-neutral-900">
                     {perk.title}
                   </p>
-                  <p className="text-xs text-neutral-400">{perk.subtitle}</p>
+                  <p className="text-sm text-neutral-400">{perk.subtitle}</p>
                 </div>
               </div>
             );

@@ -67,7 +67,7 @@ export function ProductCard({
           </div>
         </div>
 
-        <div className="pt-3 pb-1">
+        <div className="pt-3 pb-1 px-1">
           <h3 className="line-clamp-2 text-sm font-medium text-neutral-900 leading-snug">
             {product.list_title}
           </h3>

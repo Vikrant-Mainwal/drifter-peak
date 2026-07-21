@@ -1,6 +1,6 @@
 "use client";
 
-import { FilterCategory } from "../types";
+import { FilterCategory } from "../../types";
 
 const FILTERS: { label: string; value: FilterCategory }[] = [
   { label: "All", value: "all" },

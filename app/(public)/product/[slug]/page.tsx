@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import MediaGallery from "@/features/product/components/product-page/MediaGallery";
 import ProductDetails from "@/features/product/components/product-page/ProductDetails";
 import ProductTabs from "@/features/product/components/product-page/ProductTabs";
+import ProductAccordionMobile from "@/features/product/components/product-page/ProductAccordionMobile";
 import RelatedProducts from "@/features/product/components/product-page/RelatedProducts";
 import {
   getProductBySlugOrId,
@@ -10,6 +11,7 @@ import {
 } from "@/features/product/api/getProduct";
 import { PLACEHOLDER_IMAGE } from "@/lib/utils";
 import type { ProductMedia } from "@/features/product/types";
+import ProductImageGallery from "@/features/product/components/product-page/ProductImageGallery";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -41,10 +43,7 @@ export default async function ProductPage({ params }: Props) {
     <main>
       <div className="md:grid md:grid-cols-[60fr_40fr] md:min-h-[calc(100vh-56px)] mt-2">
         <div className="md:sticky md:top-14 md:h-[calc(100vh-56px)] md:overflow-y-auto no-scrollbar">
-          <MediaGallery
-            media={sortedMedia}
-            productTitle={product.list_title}
-          />
+          <MediaGallery media={sortedMedia} productTitle={product.list_title} />
         </div>
         <div
           className="
@@ -61,11 +60,17 @@ export default async function ProductPage({ params }: Props) {
           />
         </div>
       </div>
-
-      <div className="px-5 md:px-8 max-w-7xl mx-auto">
+      <div className="hidden md:block">
         <ProductTabs product={product} />
+      </div>
+      <div className="md:hidden">
+        <ProductAccordionMobile product={product} />
+      </div>
+
+      <div className="px-5 md:px-8 max-w-7xl mx-auto my-20">
         <RelatedProducts products={relatedProducts} />
       </div>
+      {/* <ProductImageGallery media={sortedMedia} productName={product.list_title} /> */}
     </main>
   );
 }

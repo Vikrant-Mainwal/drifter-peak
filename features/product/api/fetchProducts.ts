@@ -1,15 +1,17 @@
 import { createClient } from "@/lib/supabase/client";
-import { FilterCategory, Product, ProductsPage } from "../types";
+import { FilterCategory, Product, ProductsPage, SortOption } from "../types";
 
 const PAGE_SIZE = 12;
 
 export async function fetchProducts({
   category,
   cursor,
+  sort,
   search,
 }: {
   category: FilterCategory;
   cursor?: string | null;
+  sort?: SortOption;
   search?: string;
 }): Promise<ProductsPage> {
 
@@ -31,8 +33,25 @@ export async function fetchProducts({
     `
     )
     .eq("is_active", true)
-    .order("created_at", { ascending: false })
     .limit(PAGE_SIZE + 1);
+
+  // Sort
+  switch (sort) {
+    case "price-asc":
+      query = query.order("selling_price", { ascending: true }).order("created_at", { ascending: false });
+      break;
+    case "price-desc":
+      query = query.order("selling_price", { ascending: false }).order("created_at", { ascending: false });
+      break;
+    case "popular":
+      // no popularity metric on `products` yet — falls back to newest until one exists
+      query = query.order("created_at", { ascending: false });
+      break;
+    case "newest":
+    default:
+      query = query.order("created_at", { ascending: false });
+      break;
+  }
 
   // Filter by gender/category
   if (category !== "all") {
@@ -50,7 +69,10 @@ export async function fetchProducts({
     );
   }
 
-  // Cursor-based pagination using created_at
+  // Cursor-based pagination
+  // NOTE: cursor pagination below assumes sort is always created_at DESC.
+  // Once price-based sorting is live, cursoring on created_at breaks —
+  // see note below.
   if (cursor) {
     query = query.lt("created_at", cursor);
   }

@@ -243,7 +243,7 @@ function MobileSlider({
 
   return (
     <div
-      className="md:hidden relative h-[500px] overflow-hidden"
+      className="md:hidden relative h-[400px] overflow-hidden mb-5"
       tabIndex={0}
       role="region"
       aria-roledescription="carousel"
@@ -278,7 +278,7 @@ function MobileSlider({
       </div>
 
       {/* Top-right action icons: share + wishlist */}
-      <div className="absolute -top-2 -right-0 flex flex-col gap-2 z-10">
+      <div className="absolute top-2 right-2 flex flex-col gap-2 z-10">
         <button
           aria-label="Share product"
           onClick={onShare}

@@ -49,6 +49,8 @@ export type FilterCategory = "all" | "men" | "women" | "accessories";
 
 export type ProductFilters = {
   category: FilterCategory;
+  cursor?: string | null;
+  sort?: SortOption;
   search?: string;
 };
 
@@ -57,3 +59,5 @@ export type ProductsPage = {
   nextCursor: string | null;
   hasMore: boolean;
 };
+
+export type SortOption = "newest" | "price-asc" | "price-desc" | "popular";

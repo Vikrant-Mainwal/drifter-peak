@@ -2,14 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchProducts } from "../api/fetchProducts";
-import { FilterCategory } from "../types";
+import { FilterCategory, SortOption } from "../types";
 import { useProductListStore, listKey } from "../lib/store/productListStore";
 
 export function useInfiniteProducts(
   category: FilterCategory,
+  sort?: SortOption,
   search?: string
 ) {
-  const key = listKey(category, search);
+  const key = listKey(category, sort, search);
 
   const cached = useProductListStore((s) => s.byKey[key]);
   const isLoadingFromStore = useProductListStore((s) => !!s.loadingKeys[key]);
@@ -27,39 +28,39 @@ export function useInfiniteProducts(
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   const load = useCallback(
-    async (reset: boolean) => {
-      if (isLoadingRef.current) return;
-      isLoadingRef.current = true;
-      setLoadingKey(key, true);
-      setError(null);
+  async (reset: boolean) => {
+    if (isLoadingRef.current) return;
+    isLoadingRef.current = true;
+    setLoadingKey(key, true);
+    setError(null);
 
-      try {
-        const cursor = reset ? null : cursorRef.current;
-        const result = await fetchProducts({ category, cursor, search });
+    try {
+      const cursor = reset ? null : cursorRef.current;
+      const result = await fetchProducts({ category, cursor, sort, search });
 
-        cursorRef.current = result.nextCursor;
-        hasMoreRef.current = result.hasMore;
+      cursorRef.current = result.nextCursor;
+      hasMoreRef.current = result.hasMore;
 
-        if (reset) {
-          setEntry(key, {
-            products: result.products,
-            cursor: result.nextCursor,
-            hasMore: result.hasMore,
-            fetchedAt: Date.now(),
-          });
-        } else {
-          appendEntry(key, result.products, result.nextCursor, result.hasMore);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load products");
-      } finally {
-        isLoadingRef.current = false;
-        setLoadingKey(key, false);
-        setIsInitialLoading(false);
+      if (reset) {
+        setEntry(key, {
+          products: result.products,
+          cursor: result.nextCursor,
+          hasMore: result.hasMore,
+          fetchedAt: Date.now(),
+        });
+      } else {
+        appendEntry(key, result.products, result.nextCursor, result.hasMore);
       }
-    },
-    [category, search, key, setLoadingKey, setEntry, appendEntry]
-  );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load products");
+    } finally {
+      isLoadingRef.current = false;
+      setLoadingKey(key, false);
+      setIsInitialLoading(false);
+    }
+  },
+  [category, sort, search, key, setLoadingKey, setEntry, appendEntry]
+);
 
   // Runs whenever the filters (category/search) change, or on first mount.
   useEffect(() => {
@@ -104,6 +105,8 @@ export function useInfiniteProducts(
     },
     [load]
   );
+
+  
 
   return {
     products: cached?.products ?? [],
